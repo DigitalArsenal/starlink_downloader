@@ -1,7 +1,7 @@
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
 
 // URL to the manifest file
 const manifestUrl = 'https://api.starlink.com/public-files/ephemerides/MANIFEST.txt';

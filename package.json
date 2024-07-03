@@ -2,11 +2,23 @@
   "name": "starlink_downloader",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "index.mjs",
   "scripts": {
-    "run": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/test.mjs",
+    "dev:test": "nodemon --watch test --watch src --exec 'npm test'",
+    "dev": "nodemon parse.mjs",
+    "start": "node index.mjs"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cli-progress": "^3.12.0",
+    "spacedatastandards.org": "^1.0.195"
+  },
+  "devDependencies": {
+    "chai": "^5.1.1",
+    "mocha": "^10.6.0",
+    "nodemon": "^3.1.4"
+  }
 }
