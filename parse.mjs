@@ -55,8 +55,8 @@ export const parseEphemerisFile = (filePath) => {
     const nextEDB = new ephemerisDataBlockT();
     nextEDB.START_TIME = '';
     nextEDB.STOP_TIME = '';
-    nextEDB.STEP_SIZE = '';
-
+    nextEDB.STEP_SIZE = 0;
+    nextEDB.REFERENCE_FRAME = refFrame.J2000; // This is not stated in the file or metadata
     let dataStartIndex = -1;
 
     // Parse header
