@@ -29,7 +29,7 @@ const clearDirectory = (dir) => {
     mkdirSync(dir, { recursive: true });
 };
 
-const parseEphemerisFile = (filePath) => {
+export const parseEphemerisFile = (filePath) => {
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n').filter(line => line.trim() !== '');
 
@@ -196,8 +196,9 @@ export const generateOEMTFiles = (inputDir, outputDir, maxCores = 64) => {
                 });
 
                 if (fileIndex < files.length) {
+                    const currentIndex = fileIndex;
                     setTimeout(() => {
-                        worker.send({ file: files[fileIndex], inputDir, outputDir });
+                        worker.send({ file: files[currentIndex], inputDir, outputDir });
                     }, 2000)
                     fileIndex++;
                 }

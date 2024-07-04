@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.mjs",
   "scripts": {
-    "test": "mocha test/test.mjs",
+    "test": "mocha --require esm test/test.mjs",
     "dev:test": "nodemon --watch test --watch src --exec 'npm test'",
     "dev": "nodemon parse.mjs",
     "start": "node index.mjs"
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "chai": "^5.1.1",
+    "esm": "^3.2.25",
     "mocha": "^10.6.0",
     "nodemon": "^3.1.4"
   }

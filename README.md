@@ -1,6 +1,6 @@
-# Ephemeris Processing Tool
+# Starlink Ephemeris -> SpaceDataStandards.org OEM Conversion Tool
 
-This project provides a tool to process ephemeris files from the Starlink public repository and convert them to OEMT (Orbital Ephemeris Message Type) files using the Space Data Standards library.
+This project provides a tool to process ephemeris files from the Starlink public repository and convert them to OEMT (Orbital Ephemeris Message Type) files using the [Space Data Standards](https://www.npmjs.com/package/spacedatastandards.org) library.
 
 ## Table of Contents
 
@@ -52,4 +52,4 @@ The input ephemeris files follow the format provided in the Starlink public repo
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the [MIT License](https://opensource.org/license/mit)
