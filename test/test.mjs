@@ -56,7 +56,7 @@ describe('Ephemeris File Processing', () => {
     });
 
     after(() => {
-        const files = readdirSync(outputDir);
-        files.forEach(file => rmSync(join(outputDir, file)));
+        //const files = readdirSync(outputDir);
+        //files.forEach(file => rmSync(join(outputDir, file)));
     });
 });

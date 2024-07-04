@@ -1,10 +1,16 @@
-import { readdirSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'fs';
-import { join, basename } from 'path';
+import { readdirSync, readFileSync, writeFileSync, rmSync, mkdirSync, createWriteStream } from 'fs';
+import { join, basename, dirname } from 'path';
 import { standards, writeFB } from 'spacedatastandards.org';
 import cluster from 'cluster';
 import os from 'os';
 import readline from 'readline';
 import cliProgress from 'cli-progress';
+import archiver from 'archiver';
+import { fileURLToPath } from 'url';
+import { createBrotliCompress, constants as zlibConstants } from 'zlib';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const { OEMT, CATT, objectType, opsStatusCode, ephemerisDataBlockT, ephemerisDataLineT, covarianceMatrixLineT, RFMT, refFrame } = standards.OEM;
 
@@ -17,7 +23,7 @@ const promptUser = (question) => {
     return new Promise((resolve) => {
         rl.question(question, (answer) => {
             rl.close();
-            resolve(answer.toLowerCase() === 'y');
+            resolve(answer.trim().toLowerCase());
         });
     });
 };
@@ -37,22 +43,19 @@ export const parseEphemerisFile = (filePath) => {
     const [_, noradId, objectName, satelliteId, operationalStatus, startTimeUnix, classification] = filename.split('_');
 
     const nextOEMT = new OEMT();
-    nextOEMT.CLASSIFICATION = classification;
+    //nextOEMT.CLASSIFICATION = classification;
     // Set parsed values
     const nextCAT = new CATT();
     nextCAT.NORAD_CAT_ID = noradId;
-    nextCAT.OBJECT_NAME = objectName;
+    //nextCAT.OBJECT_NAME = objectName;
     nextCAT.OBJECT_TYPE = objectType.PAYLOAD;
     nextCAT.OPS_STATUS_CODE = opsStatusCode[operationalStatus.toUpperCase()];
     nextOEMT.OBJECT = nextCAT;
-    nextOEMT.ORIGINATOR = 'SPACEX';
+    //nextOEMT.ORIGINATOR = 'SPACEX';
     const nextEDB = new ephemerisDataBlockT();
     nextEDB.START_TIME = '';
     nextEDB.STOP_TIME = '';
     nextEDB.STEP_SIZE = '';
-
-    let covariance_frame = '';
-    const rF = new RFMT();
 
     let dataStartIndex = -1;
 
@@ -74,17 +77,26 @@ export const parseEphemerisFile = (filePath) => {
         if (line.includes('ephemeris_source:')) {
 
         }
-        if (line.trim() === 'UVW') {
-            covariance_frame = line.trim();
+        if (line.trim() === 'UVW') { //HAAAAAAAAAACK
+
+            let covariance_frame = line.trim();
             dataStartIndex = i + 1;
+
+            const rF = new RFMT();
 
             if (refFrame[covariance_frame]) {
                 rF.REFERENCE_FRAME = refFrame[covariance_frame];
             } else {
                 throw Error(`Reference Frame Not Found: '${covariance_frame}'`);
             }
+
+            nextEDB.COV_REFERENCE_FRAME = rF;
         }
     }
+
+    // Check that the steps are consistent
+    let lastEpoch = null;
+
     // Parse data section
     for (let i = dataStartIndex; i < lines.length; i += 4) {
         let ephemDataBlock = new ephemerisDataBlockT();
@@ -102,9 +114,17 @@ export const parseEphemerisFile = (filePath) => {
                 parseInt(time.slice(2, 4)),
                 parseInt(time.slice(4, 6))));
 
+            if (lastEpoch) {
+                const expectedDate = new Date(lastEpoch.getTime() + nextEDB.STEP_SIZE * 1000);
+                if (Math.abs(date - expectedDate) > 1000) {
+                    throw new Error(`Inconsistent step size at line ${i}: expected ${expectedDate.toISOString()}, but got ${date.toISOString()}`);
+                }
+            }
+            lastEpoch = date;
+
             let ephemLine = new ephemerisDataLineT();
 
-            ephemLine.EPOCH = date.toISOString();
+            //ephemLine.EPOCH = date.toISOString();
             ephemLine.X = parseFloat(stateLine[1]);
             ephemLine.Y = parseFloat(stateLine[2]);
             ephemLine.Z = parseFloat(stateLine[3]);
@@ -115,8 +135,7 @@ export const parseEphemerisFile = (filePath) => {
             ephemDataBlock.EPHEMERIS_DATA_LINES.push(ephemLine);
 
             let covLine = new covarianceMatrixLineT();
-            covLine.EPOCH = date.toISOString();
-            covLine.COV_REFERENCE_FRAME = rF;
+            //covLine.EPOCH = date.toISOString();
             covLine.CX_X = parseFloat(covLine1[0]);
             covLine.CY_X = parseFloat(covLine1[1]);
             covLine.CY_Y = parseFloat(covLine1[2]);
@@ -151,6 +170,52 @@ const processFile = (file, inputDir, outputDir) => {
     const outputPath = join(outputDir, `${basename(file, '.txt')}.oem`);
     const nextOEM = parseEphemerisFile(inputPath);
     writeFileSync(outputPath, writeFB(nextOEM));
+};
+
+const zipDirectory = async (source, out) => {
+    const output = createWriteStream(out);
+    const archive = archiver('tar', {
+        gzip: true,
+        gzipOptions: {
+            level: 9
+        }
+    });
+
+    output.on('close', () => {
+        console.log(`${archive.pointer()} total bytes`);
+        console.log('Archiver has been finalized and the output file descriptor has closed.');
+    });
+
+    archive.on('error', (err) => {
+        throw err;
+    });
+
+    archive.pipe(output);
+
+    archive.directory(source, false);
+
+    await archive.finalize();
+    console.log(`Zipped to ${out}`);
+};
+
+const compressWithBrotli = async (sourceDir, outFile) => {
+    const archive = archiver('tar');
+    const output = createWriteStream(outFile);
+    const brotli = createBrotliCompress({ params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11 } });
+
+    output.on('close', () => {
+        console.log(`${archive.pointer()} total bytes`);
+        console.log('Brotli compression has been finalized and the output file descriptor has closed.');
+    });
+
+    archive.on('error', (err) => {
+        throw err;
+    });
+
+    archive.pipe(brotli).pipe(output);
+    archive.directory(sourceDir, false);
+    await archive.finalize();
+    console.log(`Compressed to ${outFile}`);
 };
 
 export const generateOEMTFiles = (inputDir, outputDir, maxCores = 64) => {
@@ -219,8 +284,8 @@ export const generateOEMTFiles = (inputDir, outputDir, maxCores = 64) => {
 };
 
 const runScript = async () => {
-    const inputDir = './ephemerides';
-    const outputDir = './oems';
+    const inputDir = join(__dirname, 'ephemerides');
+    const outputDir = join(__dirname, 'oems');
 
     if (cluster.isPrimary) {
         console.log(`Input directory: ${inputDir}`);
@@ -228,7 +293,7 @@ const runScript = async () => {
 
         const shouldClear = await promptUser('Do you want to clear the output directory before processing? (y/n): ');
 
-        if (shouldClear) {
+        if (shouldClear === 'y') {
             console.log('Clearing output directory...');
             clearDirectory(outputDir);
         } else {
@@ -242,6 +307,23 @@ const runScript = async () => {
 
     if (cluster.isPrimary) {
         console.log('Processing complete.');
+        const shouldCompress = await promptUser('Do you want to compress the output directory? (y/n): ');
+
+        if (shouldCompress === "y") {
+
+            const compressionType = await promptUser('Choose compression type: gzip or brotli (g/b): ');
+            const zipFilePath = join(__dirname, 'oems.tar.gz');
+            const brotliFilePath = join(__dirname, 'oems.tar.br');
+
+            if (compressionType === 'g') {
+                await compressWithGzip(outputDir, zipFilePath);
+            } else if (compressionType === 'b') {
+                await compressWithBrotli(outputDir, brotliFilePath);
+            } else {
+                console.log('Invalid compression type chosen. Skipping compression.');
+            }
+        }
+
         process.exit(0);
     }
 };

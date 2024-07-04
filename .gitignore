@@ -1,3 +1,6 @@
 ephemerides
 node_modules
 oems
+*.zip
+oems.tar.br
+oems.tar.gz

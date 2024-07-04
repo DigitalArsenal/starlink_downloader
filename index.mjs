@@ -2,6 +2,10 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // URL to the manifest file
 const manifestUrl = 'https://api.starlink.com/public-files/ephemerides/MANIFEST.txt';
