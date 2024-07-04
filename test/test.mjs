@@ -13,9 +13,6 @@ describe('Ephemeris File Processing', () => {
         if (!existsSync(outputDir)) {
             mkdirSync(outputDir);
         }
-    });
-
-    afterEach(() => {
         const files = readdirSync(outputDir);
         files.forEach(file => rmSync(join(outputDir, file)));
     });
@@ -53,10 +50,5 @@ describe('Ephemeris File Processing', () => {
         }).catch((err) => {
             console.error('Error in generateOEMTFiles:', err);
         });
-    });
-
-    after(() => {
-        //const files = readdirSync(outputDir);
-        //files.forEach(file => rmSync(join(outputDir, file)));
     });
 });
