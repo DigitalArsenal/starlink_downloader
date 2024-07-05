@@ -7,8 +7,7 @@
   "scripts": {
     "test": "mocha --require esm test/test.mjs",
     "dev:test": "nodemon --watch test --watch src --exec 'npm test'",
-    "dev": "nodemon parse.mjs",
-    "start": "node index.mjs"
+    "start": "node index.mjs && node parse.mjs --no-prompt"
   },
   "author": "",
   "license": "ISC",

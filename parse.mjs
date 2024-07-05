@@ -222,7 +222,10 @@ export const generateOEMTFiles = (inputDir, outputDir, maxCores = 64) => {
     return new Promise((resolve, reject) => {
         const files = readdirSync(inputDir).filter(file => file.endsWith('.txt'));
         const numCPUs = Math.min(os.cpus().length, maxCores);
-
+        if (files.length === 0) {
+            console.log("No files found.");
+            process.exit(0);
+        }
         if (cluster.isPrimary) {
             console.log(`Master ${process.pid} is running`);
             console.log(`Spinning up ${numCPUs} workers...`);
@@ -286,14 +289,22 @@ export const generateOEMTFiles = (inputDir, outputDir, maxCores = 64) => {
 const runScript = async () => {
     const inputDir = join(__dirname, 'ephemerides');
     const outputDir = join(__dirname, 'oems');
+    const args = process.argv.slice(2);
+    const noPrompt = args.includes('--no-prompt');
+
+    let shouldClear = false;
+    let shouldCompress = false;
 
     if (cluster.isPrimary) {
         console.log(`Input directory: ${inputDir}`);
         console.log(`Output directory: ${outputDir}`);
 
-        const shouldClear = await promptUser('Do you want to clear the output directory before processing? (y/n): ');
+        if (!noPrompt) {
+            const shouldClearInput = await promptUser('Do you want to clear the output directory before processing? (y/n): ');
+            shouldClear = shouldClearInput === 'y';
+        }
 
-        if (shouldClear === 'y') {
+        if (shouldClear) {
             console.log('Clearing output directory...');
             clearDirectory(outputDir);
         } else {
@@ -307,11 +318,14 @@ const runScript = async () => {
 
     if (cluster.isPrimary) {
         console.log('Processing complete.');
-        const shouldCompress = await promptUser('Do you want to compress the output directory? (y/n): ');
 
-        if (shouldCompress === "y") {
+        if (!noPrompt) {
+            const shouldCompressInput = await promptUser('Do you want to compress the output directory? (y/n): ');
+            shouldCompress = shouldCompressInput === 'y';
+        }
 
-            const compressionType = await promptUser('Choose compression type: gzip or brotli (g/b): ');
+        if (shouldCompress) {
+            const compressionType = noPrompt ? null : await promptUser('Choose compression type: gzip or brotli (g/b): ');
             const zipFilePath = join(__dirname, 'oems.tar.gz');
             const brotliFilePath = join(__dirname, 'oems.tar.br');
 
@@ -319,7 +333,7 @@ const runScript = async () => {
                 await compressWithGzip(outputDir, zipFilePath);
             } else if (compressionType === 'b') {
                 await compressWithBrotli(outputDir, brotliFilePath);
-            } else {
+            } else if (!noPrompt) {
                 console.log('Invalid compression type chosen. Skipping compression.');
             }
         }
@@ -328,7 +342,6 @@ const runScript = async () => {
     }
 };
 
-// Only run the script if this file is being run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
     runScript();
 }

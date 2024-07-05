@@ -1,8 +1,8 @@
 import https from 'https';
 import fs from 'fs';
-import path from 'path';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
+import { join, basename, dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 const manifestUrl = 'https://api.starlink.com/public-files/ephemerides/MANIFEST.txt';
 
 // Directory to save the ephemeris files
-const outputDir = path.join(__dirname, 'ephemerides');
+const outputDir = join(__dirname, 'ephemerides');
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
@@ -32,7 +32,7 @@ function downloadFile(url, dest) {
                 file.close(resolve);
             });
         }).on('error', (err) => {
-            fs.unlink(dest);
+            fs.unlinkSync(dest);
             reject(err);
         });
     });
@@ -53,8 +53,8 @@ async function downloadEphemerides() {
         rl.on('line', async (line) => {
             if (line.trim()) {
                 const fileUrl = `https://api.starlink.com/public-files/ephemerides/${line.trim()}`;
-                const fileName = path.basename(fileUrl);
-                const filePath = path.join(outputDir, fileName);
+                const fileName = basename(fileUrl);
+                const filePath = join(outputDir, fileName);
                 try {
                     await downloadFile(fileUrl, filePath);
                     console.log(`Downloaded: ${fileName}`);
