@@ -20,6 +20,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:modules": "tsx scripts/build-modules.ts",
+    "build:bundles": "tsx scripts/build-sdn-bundles.ts",
     "build:all": "npm run build:modules && npm run build",
     "ephem": "tsx src/host/cli/index.ts",
     "test": "vitest run",

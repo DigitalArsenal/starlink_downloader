@@ -138,6 +138,20 @@ interface (see [docs/architecture.md](docs/architecture.md)).
 Adding a module is purely additive — see [docs/adding-a-module.md](docs/adding-a-module.md).
 Adding a data source — see [docs/adding-a-source.md](docs/adding-a-source.md).
 
+## SDN bundles (searchable / installable)
+
+Every unit is packaged as its own **Space Data Network** bundle — 5 compute
+modules (`space-data-network-module-*`) and 17 data sources
+(`space-data-network-data-source-*`) — each with a signed spacedatastandards
+`$PLG` listing record (searchable by name/family/tags) and protected artifacts:
+
+```sh
+npm run build:modules && npm run build:bundles   # -> bundles/ (+ bundles/index.json)
+```
+
+See [docs/sdn-bundles.md](docs/sdn-bundles.md) for the layout, the `$PLG`
+search fields, and the sign/publish flow.
+
 ## Programmatic API
 
 ```ts
