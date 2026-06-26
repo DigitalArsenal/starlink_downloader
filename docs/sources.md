@@ -17,6 +17,7 @@ feed** — no CelesTrak, Space-Track, or other aggregators. Verified working
 | `gps-precise` | IGS / BKG | `igs.bkg.bund.de/root_ftp/IGS/products/<week>/` | SP3 (IGS0OPSULT/RAP, GPS) | newest in GPS-week dir |
 | `glonass-precise` | IGS / ESA | `navigation-office.esa.int/products/gnss-products/<week>/` | SP3 (ESA0OPSULT/RAP, GPS+GLONASS) | newest in GPS-week dir |
 | `esa-pod` | ESA / ESOC Navigation Office | `navigation-office.esa.int/products/` | SP3 — multi-GNSS (ESA0MGNFIN: G/R/E/C/J) + Swarm A/B/C + CryoSat-2 | newest of each POD product |
+| `eumetsat` | EUMETSAT | `service.eumetsat.int/tle/` | TLE (Metop, NOAA/JPSS, Sentinel-3/6, Metop-SG) | scrape per-satellite JS data files |
 
 ### ESA POD products (`esa-pod`)
 

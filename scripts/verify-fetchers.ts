@@ -16,7 +16,11 @@ for (const src of listSources()) {
       continue;
     }
     const first = resources[0]!;
-    const res = await http.get(first.url, { retryCount: 2, timeoutMs: 30_000 });
+    const res = await http.get(first.url, {
+      retryCount: 2,
+      timeoutMs: 30_000,
+      ...(first.headers ? { headers: first.headers } : {}),
+    });
     const dt = Date.now() - t0;
     if (res.ok) ok++;
     console.log(

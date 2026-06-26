@@ -11,6 +11,7 @@ import { telesatSource } from './telesat.js';
 import { cssSource } from './css.js';
 import { gpsSource, glonassSource } from './gnss.js';
 import { esaPodSource } from './esa-pod.js';
+import { eumetsatSource } from './eumetsat.js';
 import { spireSource } from './spire.js';
 import { spaceTrackSource } from './spacetrack.js';
 
@@ -46,6 +47,7 @@ const ALL: EphemerisSource[] = [
   gpsSource,
   glonassSource,
   esaPodSource,
+  eumetsatSource,
   // Credentialed sources — inert unless their .env credentials are present.
   spireSource,
   spaceTrackSource,
