@@ -170,11 +170,11 @@ CelesTrak/Space-Track aggregators) and verified via
 Labs, ISS (NASA), SES, Intelsat, Telesat, CSS/Tiangong, GPS + GLONASS precise
 SP3, **ESA POD** (multi-GNSS + Swarm + CryoSat-2), **EUMETSAT** (Metop/NOAA/
 Sentinel), and **CPF** laser-ranging predictions — none require a login. Plus
-three **credentialed** sources, inert until their `.env` keys are set:
+four **credentialed** sources, inert until their `.env` keys are set:
 **Spire** (API key), **Space-Track** (login — covers Kuiper/Iridium/ORBCOMM/AST,
-which have no upstream feed), and **JSC Vimpel** (login). This covers the full
-CelesTrak Supplemental operator set via upstream feeds — see
-[docs/sources.md](docs/sources.md).
+which have no upstream feed), **JSC Vimpel** (login), and **EDC** (login — full
+ILRS CPF laser-target set). This covers the full CelesTrak Supplemental operator
+set via upstream feeds — see [docs/sources.md](docs/sources.md).
 
 ## Roadmap
 

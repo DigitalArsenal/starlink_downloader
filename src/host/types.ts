@@ -82,6 +82,10 @@ export interface DiscoveredResource {
   noradId: number | null;
   /** Per-resource file extension (overrides the source default for archiving). */
   ext?: string;
+  /** HTTP method (default GET). Some authed APIs require POST. */
+  method?: string;
+  /** Request body for non-GET fetches (e.g. EDC form-encoded download). */
+  body?: string;
   /** Per-resource HTTP headers (e.g. auth Bearer token or session cookie). */
   headers?: Record<string, string>;
   /** Free-form hints passed to the parser (e.g. filename-derived fields). */

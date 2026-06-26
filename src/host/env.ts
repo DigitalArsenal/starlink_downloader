@@ -47,6 +47,13 @@ export interface VimpelCredentials {
   baseUrl: string;
 }
 
+export interface EdcCredentials {
+  username: string;
+  password: string;
+  /** EDC API v1 endpoint. */
+  apiUrl: string;
+}
+
 /** Space-Track login, or null if not configured. */
 export function spaceTrackCredentials(): SpaceTrackCredentials | null {
   const identity = process.env.SPACETRACK_IDENTITY?.trim();
@@ -66,6 +73,18 @@ export function spireCredentials(): SpireCredentials | null {
   return {
     apiKey,
     baseUrl: process.env.SPIRE_BASE_URL?.trim() || 'https://api.orb.spire.com',
+  };
+}
+
+/** EDC (EUROLAS Data Center, DGFI-TUM) login for full ILRS CPF, or null. */
+export function edcCredentials(): EdcCredentials | null {
+  const username = process.env.EDC_USERNAME?.trim();
+  const password = process.env.EDC_PASSWORD?.trim();
+  if (!username || !password) return null;
+  return {
+    username,
+    password,
+    apiUrl: process.env.EDC_API_URL?.trim() || 'https://edc.dgfi.tum.de/api/v1/',
   };
 }
 

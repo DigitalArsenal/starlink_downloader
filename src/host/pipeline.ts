@@ -84,9 +84,12 @@ export class Pipeline {
 
   async fetch(source: EphemerisSource, resource: DiscoveredResource): Promise<RawEphemerisFile> {
     const cfg = sourceConfig(this.config, source.id);
-    const res = await this.http.get(resource.url, {
+    const res = await this.http.send({
+      url: resource.url,
+      method: resource.method ?? 'GET',
       retryCount: cfg.retryCount,
       timeoutMs: cfg.timeoutMs,
+      ...(resource.body !== undefined ? { body: resource.body } : {}),
       ...(resource.headers ? { headers: resource.headers } : {}),
     });
     if (!res.ok) throw new Error(`fetch ${resource.url} -> HTTP ${res.status}`);

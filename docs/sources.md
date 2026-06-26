@@ -83,7 +83,7 @@ served via an open alternative instead):
 | --- | --- | --- |
 | **Spire Global** | API key (Bearer) on `api.orb.spire.com` | No anonymous access; 401/403 without a key. Wired as `spire`. |
 | **JSC Vimpel** | portal login (`spacedata.vimpel.ru`) | Register at `/ru/user/register` (CAPTCHA + approval). Wired as `vimpel`. |
-| **EDC** (full ILRS CPF) | free EDC account (username/password) | edc.dgfi.tum.de API; full laser-target CPF set beyond ESA's Galileo. |
+| **EDC** (full ILRS CPF) | free EDC account (username/password) | edc.dgfi.tum.de POST API; full laser-target CPF set beyond ESA's Galileo. Wired as `cpf-edc`. |
 | **Amazon Kuiper** | Space-Track login | No operator feed; data only via Space-Track. |
 | **Iridium** | Space-Track login | No operator feed. |
 | **ORBCOMM** | Space-Track login | No operator feed. |

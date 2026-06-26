@@ -16,6 +16,7 @@ import { cpfSource } from './cpf.js';
 import { spireSource } from './spire.js';
 import { spaceTrackSource } from './spacetrack.js';
 import { vimpelSource } from './vimpel.js';
+import { cpfEdcSource } from './cpf-edc.js';
 
 export interface SourceContext {
   http: HttpClient;
@@ -55,6 +56,7 @@ const ALL: EphemerisSource[] = [
   spireSource,
   spaceTrackSource,
   vimpelSource,
+  cpfEdcSource,
 ];
 
 export function listSources(): EphemerisSource[] {
