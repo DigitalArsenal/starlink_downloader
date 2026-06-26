@@ -7,8 +7,11 @@
  * derivative (velocity) nearest each query epoch.
  */
 import flatbuffers from 'flatbuffers';
-import * as BSP from './vendor/sds-bsp/main.js';
+import { standards } from 'spacedatastandards.org';
 import type { TypeRef } from 'space-data-module-sdk/host/isomorphic';
+
+// $BSP (B-spline interpolation) bindings from the published spacedatastandards.org.
+const BSP = standards.BSP as unknown as Record<string, any>;
 import type { ModuleRegistry } from './modules/registry.js';
 import type { StateVector } from './types.js';
 import { decodeStatesFrame } from './wire.js';

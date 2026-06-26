@@ -27,9 +27,9 @@ on orbpro-stack's local SDK:
 
 Our own C++/WASM modules are compiled against the same 0.8.5, so everything
 speaks one protocol. Point `ORBPRO_MODULES_DIR` at the modules directory if your
-checkout differs. The `$BSP` FlatBuffer bindings are vendored from orbpro-stack's
-`spacedatastandards.org` into `src/host/vendor/sds-bsp/` (npm
-spacedatastandards@1.99.0 doesn't ship `$BSP`).
+checkout differs. The `$BSP` FlatBuffer bindings come from the **published
+`spacedatastandards.org` (≥1.133.0)** — `import { standards } from
+'spacedatastandards.org'; standards.BSP` — no vendored standards.
 
 ## Notes
 
