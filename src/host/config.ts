@@ -26,10 +26,10 @@ const ConfigSchema = z.object({
     .default({ adapter: 'flatsql' }),
   interpolation: z
     .object({
-      defaultInterpolator: z.string().default('hermite'),
+      defaultInterpolator: z.string().default('bspline'),
       defaultOrder: z.number().int().positive().default(8),
     })
-    .default({ defaultInterpolator: 'hermite', defaultOrder: 8 }),
+    .default({ defaultInterpolator: 'bspline', defaultOrder: 8 }),
   sources: z.record(SourceConfigSchema).default({}),
 });
 export type Config = z.infer<typeof ConfigSchema>;

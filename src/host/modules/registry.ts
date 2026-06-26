@@ -21,6 +21,7 @@ export const MODULE_KINDS = [
   'normalizer',
   'interpolator',
   'exporter',
+  'propagator',
 ] as const;
 export type ModuleKind = (typeof MODULE_KINDS)[number];
 
@@ -48,6 +49,8 @@ export interface RegisteredModule {
   dir: string;
   buildSpec: ModuleBuildSpec;
   module: LoadedModule;
+  /** True for reused external (orbpro-stack) modules — not compiled from source here. */
+  external?: boolean;
 }
 
 export class ModuleRegistry {
@@ -91,12 +94,21 @@ export class ModuleRegistry {
     if (!existsSync(path)) throw new Error(`module '${id}' is missing its ${what}: ${path}`);
   }
 
-  /** Build any stale modules (compiles C++ -> WASM). */
+  /** Build any stale modules (compiles C++ -> WASM). Skips external modules. */
   async buildAll(force = false): Promise<void> {
     for (const reg of this.byId.values()) {
+      if (reg.external) continue;
       if (force || isStale(reg.buildSpec)) {
         await buildModule(reg.buildSpec);
       }
+    }
+  }
+
+  /** Register reused external (orbpro-stack) modules, AOT-compiled into cacheDir. */
+  async loadExternal(cacheDir: string): Promise<void> {
+    const { loadExternalModules } = await import('./external.js');
+    for (const reg of await loadExternalModules(cacheDir)) {
+      this.byId.set(reg.descriptor.id, reg);
     }
   }
 
@@ -135,7 +147,9 @@ export class ModuleRegistry {
     return this.list().map((m) => ({
       id: m.descriptor.id,
       kind: m.descriptor.kind,
-      built: existsSync(m.buildSpec.aotPath) && !isStale(m.buildSpec),
+      built: m.external
+        ? existsSync(m.buildSpec.wasmPath)
+        : existsSync(m.buildSpec.aotPath) && !isStale(m.buildSpec),
       provides: m.descriptor.provides,
     }));
   }
@@ -146,10 +160,11 @@ export class ModuleRegistry {
 }
 
 
-/** Convenience: discover + build all modules and return the registry. */
+/** Convenience: discover + build local modules, register external ones. */
 export async function loadRegistry(opts: { build?: boolean } = {}): Promise<ModuleRegistry> {
   const registry = ModuleRegistry.discover();
   if (opts.build !== false) await registry.buildAll();
+  await registry.loadExternal(join(MODULES_DIR, '..', '..', '.external-cache'));
   log.debug({ modules: registry.list().map((m) => m.descriptor.id) }, 'registry ready');
   return registry;
 }

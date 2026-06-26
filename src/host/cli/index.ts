@@ -5,8 +5,10 @@ import { writeFileSync } from 'node:fs';
 import { EphemerisArchive } from '../api.js';
 import { loadConfig, type Config } from '../config.js';
 import { ProgressUI } from './progress.js';
+import { join } from 'node:path';
 import { ModuleRegistry } from '../modules/registry.js';
 import { listSources } from '../sources/index.js';
+import { PACKAGE_ROOT } from '../paths.js';
 import { isTty } from '../logger.js';
 
 const program = new Command();
@@ -222,6 +224,7 @@ program
   .description('List registered compute modules (fetchers/parsers/validators/interpolators/exporters)')
   .action(async () => {
     const registry = ModuleRegistry.discover();
+    await registry.loadExternal(join(PACKAGE_ROOT, '.external-cache'));
     for (const s of registry.status()) {
       process.stdout.write(
         `${s.kind.padEnd(13)} ${s.id.padEnd(24)} built=${s.built ? 'yes' : 'no '} provides=[${s.provides.join(', ')}]\n`,

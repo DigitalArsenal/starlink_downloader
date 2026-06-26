@@ -4,8 +4,10 @@
  * `EphemerisArchive` wires the module registry, the SQLite archive, the SDK
  * isomorphic http client, the source registry, and the ingestion pipeline.
  */
+import { join } from 'node:path';
 import type { Config } from './config.js';
 import { loadConfig, sourceConfig } from './config.js';
+import { PACKAGE_ROOT } from './paths.js';
 import { ModuleRegistry } from './modules/registry.js';
 import { FlatSqlStorage } from './storage/flatsql.js';
 import type { StorageAdapter } from './storage/index.js';
@@ -52,6 +54,7 @@ export class EphemerisArchive {
     const config = opts.config ?? loadConfig(opts.configPath);
     const registry = ModuleRegistry.discover();
     if (opts.build !== false) await registry.buildAll();
+    await registry.loadExternal(join(PACKAGE_ROOT, '.external-cache'));
 
     const storage = new FlatSqlStorage(config.dataDir);
     await storage.init();

@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && cp -R src/host/vendor dist/host/vendor",
     "build:modules": "tsx scripts/build-modules.ts",
     "build:bundles": "tsx scripts/build-sdn-bundles.ts",
     "build:all": "npm run build:modules && npm run build",
@@ -35,7 +35,7 @@
     "flatbuffers": "^25.9.23",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
-    "space-data-module-sdk": "^0.8.4",
+    "space-data-module-sdk": "file:../orbpro-stack/repos/ancillary-packages/space-data-module-sdk",
     "spacedatastandards.org": "^1.99.0",
     "undici": "^7.3.0",
     "yaml": "^2.7.0",

@@ -30,9 +30,11 @@ const WASMEDGE_ENV = wasmEdgeEnv();
 export interface InputFrame {
   portId: string;
   payload: Uint8Array;
+  /** Optional SDS type ref (required by typed modules, e.g. orbpro math-bspline $BSP). */
+  typeRef?: TypeRef;
 }
 
-/** Permissive type ref — modules read raw payload bytes regardless of schema. */
+/** Permissive type ref — my modules read raw payload bytes regardless of schema. */
 const ANY_TYPE: TypeRef = { acceptsAnyFlatbuffer: true };
 
 export class ModuleInvocationError extends Error {
@@ -101,7 +103,7 @@ export class LoadedModule {
   async invoke(methodId: string, inputs: InputFrame[]): Promise<OutputFrame[]> {
     const request = encodePluginInvokeRequest({
       methodId,
-      inputs: inputs.map((f) => ({ portId: f.portId, payload: f.payload, typeRef: ANY_TYPE })),
+      inputs: inputs.map((f) => ({ portId: f.portId, payload: f.payload, typeRef: f.typeRef ?? ANY_TYPE })),
     });
     const responseBytes = await this.runWasmEdge(request);
     const response = decodePluginInvokeResponse(responseBytes);

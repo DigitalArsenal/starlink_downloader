@@ -38,6 +38,24 @@ export function isStale(spec: ModuleBuildSpec): boolean {
   return existsSync(spec.sourcePath) && statSync(spec.sourcePath).mtimeMs > aotMtime;
 }
 
+/**
+ * AOT-compile an already-built `.wasm` (e.g. an external orbpro-stack module)
+ * to a WasmEdge native artifact, with the DYLD/LD library path restored.
+ * Returns the AOT path; rebuilds only when stale.
+ */
+export async function aotCompile(wasmPath: string, aotPath: string): Promise<string> {
+  if (
+    existsSync(aotPath) &&
+    statSync(aotPath).mtimeMs >= statSync(wasmPath).mtimeMs
+  ) {
+    return aotPath;
+  }
+  mkdirSync(dirname(aotPath), { recursive: true });
+  log.info({ wasm: wasmPath }, 'AOT compiling external module (wasmedge)');
+  await execFileAsync(WASMEDGE_BIN, ['compile', wasmPath, aotPath], { env: wasmEdgeEnv() });
+  return aotPath;
+}
+
 /** Compile (and validate) a single module. Returns the wasm path. */
 export async function buildModule(spec: ModuleBuildSpec): Promise<string> {
   mkdirSync(dirname(spec.manifestPath), { recursive: true });

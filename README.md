@@ -131,9 +131,12 @@ interface (see [docs/architecture.md](docs/architecture.md)).
 | --- | --- | --- |
 | `starlink-parser` | parser | SpaceX Starlink MEME `.txt` → SI state vectors + metadata |
 | `validator` | validator | monotonic/duplicate epochs, NaN, altitude, velocity, orbital energy, velocity continuity |
-| `interpolator-lagrange` | interpolator | windowed Lagrange of configurable order |
-| `interpolator-hermite` | interpolator | cubic Hermite (position+velocity), analytic velocity |
 | `exporter-csv` | exporter | state vectors → CSV (Unix + ISO epochs) |
+
+**Interpolation and propagation reuse the existing orbpro-stack SDN modules**
+(rather than our own): `getState` drives `foundation/math-bspline`
+(`interpolate_bspline`, position + velocity over `$BSP`), and `propagator/sgp4`
+is registered for TLE/OMM propagation. See [docs/orbpro-modules.md](docs/orbpro-modules.md).
 
 Adding a module is purely additive — see [docs/adding-a-module.md](docs/adding-a-module.md).
 Adding a data source — see [docs/adding-a-source.md](docs/adding-a-source.md).
