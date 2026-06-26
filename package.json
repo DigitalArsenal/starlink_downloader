@@ -1,25 +1,52 @@
 {
-  "name": "starlink_downloader",
-  "version": "1.0.0",
-  "description": "",
+  "name": "ephem",
+  "version": "0.1.0",
+  "description": "Pluggable, isomorphic C++/WASM satellite ephemeris fetch/normalize/validate/archive/serve system orchestrated by a Node.js/TypeScript host harness (space-data-module-sdk compatible).",
   "type": "module",
-  "main": "index.mjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "ephem": "./dist/host/cli/index.js"
+  },
+  "main": "./dist/host/api.js",
+  "types": "./dist/host/api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/host/api.d.ts",
+      "import": "./dist/host/api.js"
+    }
+  },
   "scripts": {
-    "test": "mocha --require esm test/test.mjs",
-    "dev:test": "nodemon --watch test --watch src --exec 'npm test'",
-    "start": "node index.mjs && node parse.mjs --no-prompt"
+    "build": "tsc -p tsconfig.json",
+    "build:modules": "tsx scripts/build-modules.ts",
+    "build:all": "npm run build:modules && npm run build",
+    "ephem": "tsx src/host/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
-    "archiver": "^7.0.1",
     "cli-progress": "^3.12.0",
-    "spacedatastandards.org": "^1.0.197"
+    "commander": "^13.1.0",
+    "flatbuffers": "^25.9.23",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "space-data-module-sdk": "^0.8.4",
+    "spacedatastandards.org": "^1.99.0",
+    "undici": "^7.3.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.1",
+    "flatsql": "^0.4.3",
+    "flatc-wasm": "^26.1.32"
   },
   "devDependencies": {
-    "chai": "^5.1.1",
-    "esm": "^3.2.25",
-    "mocha": "^10.6.0",
-    "nodemon": "^3.1.4"
+    "@types/cli-progress": "^3.11.6",
+    "@types/node": "^22.10.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
   }
 }

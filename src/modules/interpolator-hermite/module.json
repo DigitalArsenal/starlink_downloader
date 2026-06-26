@@ -1,0 +1,12 @@
+{
+  "id": "interpolator-hermite",
+  "kind": "interpolator",
+  "methodId": "interpolate",
+  "language": "c++",
+  "name": "Hermite Interpolator",
+  "version": "0.1.0",
+  "inputs": ["states", "query"],
+  "outputs": ["states"],
+  "provides": ["hermite"],
+  "description": "Cubic Hermite interpolation using position and velocity at bracketing nodes; velocity from the analytic derivative."
+}

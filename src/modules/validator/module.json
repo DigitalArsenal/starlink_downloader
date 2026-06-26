@@ -1,0 +1,12 @@
+{
+  "id": "validator",
+  "kind": "validator",
+  "methodId": "validate",
+  "language": "c++",
+  "name": "Ephemeris Validator",
+  "version": "0.1.0",
+  "inputs": ["states"],
+  "outputs": ["result"],
+  "provides": ["default"],
+  "description": "Validates state vector ephemerides: monotonic/duplicate epochs, NaN, altitude, velocity, orbital energy, continuity."
+}

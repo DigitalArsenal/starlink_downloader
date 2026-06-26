@@ -1,0 +1,12 @@
+{
+  "id": "interpolator-lagrange",
+  "kind": "interpolator",
+  "methodId": "interpolate",
+  "language": "c++",
+  "name": "Lagrange Interpolator",
+  "version": "0.1.0",
+  "inputs": ["states", "query"],
+  "outputs": ["states"],
+  "provides": ["lagrange"],
+  "description": "Windowed Lagrange polynomial interpolation of configurable order over each Cartesian component."
+}

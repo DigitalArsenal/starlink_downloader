@@ -1,0 +1,12 @@
+{
+  "id": "starlink-parser",
+  "kind": "parser",
+  "methodId": "parse",
+  "language": "c++",
+  "name": "Starlink MEME Ephemeris Parser",
+  "version": "0.1.0",
+  "inputs": ["raw"],
+  "outputs": ["meta", "states"],
+  "provides": ["spacex-starlink"],
+  "description": "Parses SpaceX Starlink public MEME ephemeris .txt files into SI state vectors."
+}

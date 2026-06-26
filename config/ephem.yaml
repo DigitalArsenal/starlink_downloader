@@ -1,0 +1,30 @@
+# ephem configuration. Pass with `ephem --config config/ephem.yaml <command>`.
+
+# Where the SQLite archive and raw downloaded files are kept.
+dataDir: ./data
+
+# Maximum concurrent in-flight resources (download + parse + validate + store).
+concurrency: 8
+
+storage:
+  # 'sqlite' (default) or 'postgres' (adapter interface; see docs).
+  adapter: sqlite
+
+interpolation:
+  # Default interpolator module tag and order used by `getState` / `state`.
+  defaultInterpolator: hermite
+  defaultOrder: 8
+
+# Per-source overrides. Any source omitted here uses these same defaults.
+sources:
+  spacex-starlink:
+    enabled: true
+    # Cap discovered resources per refresh (null = all ~10k). Handy for demos.
+    limit: null
+    timeoutMs: 60000
+    # Retries AFTER the first attempt. Minimum 5 (enforced).
+    retryCount: 5
+    # Requests/second to the source host (0 = unlimited).
+    rateLimitPerSec: 0
+    # Scheduled polling interval in seconds (0 = manual refresh only).
+    pollIntervalSec: 0

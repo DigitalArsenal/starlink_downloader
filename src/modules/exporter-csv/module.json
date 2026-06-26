@@ -1,0 +1,12 @@
+{
+  "id": "exporter-csv",
+  "kind": "exporter",
+  "methodId": "export_csv",
+  "language": "c++",
+  "name": "CSV Exporter",
+  "version": "0.1.0",
+  "inputs": ["states"],
+  "outputs": ["out"],
+  "provides": ["csv"],
+  "description": "Exports state vectors to CSV with Unix-seconds and ISO-8601 epochs."
+}
