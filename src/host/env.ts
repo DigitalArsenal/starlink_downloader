@@ -40,6 +40,13 @@ export interface SpireCredentials {
   baseUrl: string;
 }
 
+export interface VimpelCredentials {
+  identity: string;
+  password: string;
+  /** HTTP-only base URL (the portal's HTTPS cert is dead). */
+  baseUrl: string;
+}
+
 /** Space-Track login, or null if not configured. */
 export function spaceTrackCredentials(): SpaceTrackCredentials | null {
   const identity = process.env.SPACETRACK_IDENTITY?.trim();
@@ -59,5 +66,17 @@ export function spireCredentials(): SpireCredentials | null {
   return {
     apiKey,
     baseUrl: process.env.SPIRE_BASE_URL?.trim() || 'https://api.orb.spire.com',
+  };
+}
+
+/** JSC Vimpel portal login, or null if not configured. */
+export function vimpelCredentials(): VimpelCredentials | null {
+  const identity = process.env.VIMPEL_IDENTITY?.trim();
+  const password = process.env.VIMPEL_PASSWORD?.trim();
+  if (!identity || !password) return null;
+  return {
+    identity,
+    password,
+    baseUrl: process.env.VIMPEL_BASE_URL?.trim() || 'http://spacedata.vimpel.ru',
   };
 }

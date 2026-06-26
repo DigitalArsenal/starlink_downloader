@@ -164,13 +164,16 @@ details and the `GOAL.md` for the full specification.
 
 ## Data sources
 
-Eleven **upstream** operator/producer feeds are wired (no CelesTrak/Space-Track
-aggregators) and verified via `npx tsx scripts/verify-fetchers.ts`: SpaceX
-Starlink, Eutelsat OneWeb, Planet Labs, ISS (NASA), SES, Intelsat, Telesat,
-CSS/Tiangong, GPS + GLONASS precise SP3, and **ESA POD** (multi-GNSS + Swarm +
-CryoSat-2). **All eleven are anonymous — none require a login.** Full details,
-the providers that do **not** publish an anonymous upstream feed (Kuiper, Spire,
-Iridium, ORBCOMM, AST), and the login requirements are in
+**Thirteen anonymous upstream** operator/producer feeds are wired (no
+CelesTrak/Space-Track aggregators) and verified via
+`npx tsx scripts/verify-fetchers.ts`: SpaceX Starlink, Eutelsat OneWeb, Planet
+Labs, ISS (NASA), SES, Intelsat, Telesat, CSS/Tiangong, GPS + GLONASS precise
+SP3, **ESA POD** (multi-GNSS + Swarm + CryoSat-2), **EUMETSAT** (Metop/NOAA/
+Sentinel), and **CPF** laser-ranging predictions — none require a login. Plus
+three **credentialed** sources, inert until their `.env` keys are set:
+**Spire** (API key), **Space-Track** (login — covers Kuiper/Iridium/ORBCOMM/AST,
+which have no upstream feed), and **JSC Vimpel** (login). This covers the full
+CelesTrak Supplemental operator set via upstream feeds — see
 [docs/sources.md](docs/sources.md).
 
 ## Roadmap

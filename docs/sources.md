@@ -18,6 +18,11 @@ feed** — no CelesTrak, Space-Track, or other aggregators. Verified working
 | `glonass-precise` | IGS / ESA | `navigation-office.esa.int/products/gnss-products/<week>/` | SP3 (ESA0OPSULT/RAP, GPS+GLONASS) | newest in GPS-week dir |
 | `esa-pod` | ESA / ESOC Navigation Office | `navigation-office.esa.int/products/` | SP3 — multi-GNSS (ESA0MGNFIN: G/R/E/C/J) + Swarm A/B/C + CryoSat-2 | newest of each POD product |
 | `eumetsat` | EUMETSAT | `service.eumetsat.int/tle/` | TLE (Metop, NOAA/JPSS, Sentinel-3/6, Metop-SG) | scrape per-satellite JS data files |
+| `cpf` | ESA / ESOC Navigation Office | `navigation-office.esa.int/products/cpf_predictions/` | CPF v2 laser-ranging predictions (Galileo) | newest `<target>_cpf_<yymmdd>_<seq>.esa` per target |
+
+Plus three **credentialed** sources (inert until their `.env` keys are set):
+`spire` (Spire orbit API key), `space-track` (login — covers Kuiper/Iridium/ORBCOMM/AST
+which have no upstream feed), and `vimpel` (JSC Vimpel portal login).
 
 ### ESA POD products (`esa-pod`)
 
@@ -40,18 +45,27 @@ source later (Starlink MEME, CCSDS OEM, SP3, LTEF, I11, ECF, …) following
 `docs/adding-a-module.md`, after which those sources flow through the full
 parse → validate → normalize → store pipeline.
 
+## CelesTrak Supplemental coverage
+
+This system covers the full CelesTrak Supplemental GP operator set via **upstream**
+feeds (not CelesTrak): `starlink, oneweb, planet, ses, intelsat, telesat, gps,
+glonass, iss, css, cpf, eumetsat` are anonymous upstream; `kuiper, iridium,
+orbcomm, ast` have no upstream feed and are covered via the credentialed
+**Space-Track** source. The full ILRS CPF target set (LAGEOS, LARES, Etalon,
+Sentinel, Jason, …) beyond ESA's Galileo CPF lives at **EDC** (edc.dgfi.tum.de,
+free account) or **CDDIS** (NASA Earthdata) — wire as a credentialed source.
+
 ## Providers without an anonymous upstream public feed
 
-Researched directly (operator domains, FCC filings, public buckets); these do
-**not** self-host an anonymous public ephemeris feed today — their orbital data
-reaches the public only via excluded aggregators (Space-Track/CelesTrak), or is
-gated behind authentication:
+These do **not** self-host an anonymous public feed; their data is reached via a
+credentialed source instead:
 
-- **Amazon Kuiper / Amazon Leo** — no operator-hosted feed; shares via Space-Track / NOAA TraCSS only.
-- **Spire Global** — an orbit API exists (`api.orb.spire.com/ephemeris`, `/tle`) but requires an API key (HTTP 401/403 anonymously). Provide credentials to enable a fetcher.
-- **Iridium** — no ephemeris on any iridium.com domain; routes to Space-Track.
-- **ORBCOMM** — corporate IoT site only; no orbital-data section.
-- **AST SpaceMobile** — no public feed; shares high-fidelity data privately with NSF NRAO and TLEs via CelesTrak.
+- **Amazon Kuiper** — no operator feed; via **Space-Track** (`KUIPER`).
+- **Iridium** — no operator feed; via **Space-Track** (`IRIDIUM`).
+- **ORBCOMM** — no operator feed; via **Space-Track** (`ORBCOMM`).
+- **AST SpaceMobile** — no operator feed; via **Space-Track** (`BLUEWALKER`/`BLUEBIRD`).
+- **Spire Global** — orbit API requires an API key (`api.orb.spire.com`); credentialed source.
+- **JSC Vimpel** — portal requires registration + login; credentialed source.
 
 If you have a specific upstream URL or credentials for any of these, add a
 source descriptor in `src/host/sources/` (see `docs/adding-a-source.md`).
@@ -67,7 +81,9 @@ served via an open alternative instead):
 
 | Provider | Login / credential needed | Notes |
 | --- | --- | --- |
-| **Spire Global** | API key (Bearer) on `api.orb.spire.com` | No anonymous access; 401/403 without a key. |
+| **Spire Global** | API key (Bearer) on `api.orb.spire.com` | No anonymous access; 401/403 without a key. Wired as `spire`. |
+| **JSC Vimpel** | portal login (`spacedata.vimpel.ru`) | Register at `/ru/user/register` (CAPTCHA + approval). Wired as `vimpel`. |
+| **EDC** (full ILRS CPF) | free EDC account (username/password) | edc.dgfi.tum.de API; full laser-target CPF set beyond ESA's Galileo. |
 | **Amazon Kuiper** | Space-Track login | No operator feed; data only via Space-Track. |
 | **Iridium** | Space-Track login | No operator feed. |
 | **ORBCOMM** | Space-Track login | No operator feed. |

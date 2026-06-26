@@ -12,8 +12,10 @@ import { cssSource } from './css.js';
 import { gpsSource, glonassSource } from './gnss.js';
 import { esaPodSource } from './esa-pod.js';
 import { eumetsatSource } from './eumetsat.js';
+import { cpfSource } from './cpf.js';
 import { spireSource } from './spire.js';
 import { spaceTrackSource } from './spacetrack.js';
+import { vimpelSource } from './vimpel.js';
 
 export interface SourceContext {
   http: HttpClient;
@@ -48,9 +50,11 @@ const ALL: EphemerisSource[] = [
   glonassSource,
   esaPodSource,
   eumetsatSource,
+  cpfSource,
   // Credentialed sources — inert unless their .env credentials are present.
   spireSource,
   spaceTrackSource,
+  vimpelSource,
 ];
 
 export function listSources(): EphemerisSource[] {
