@@ -44,7 +44,7 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 - [ ] **2b.4** SDK/wallet ECIES + cross-runtime test (wrap-for-secp256k1-recipient on one runtime → unwrap on another). [space-data-module-sdk + hd-wallet-wasm]
 
 ## WS7 — FlatSQL `(producer, standard)` table routing (50-file blast radius)
-- [ ] **7.1** `(producer, standard)`→table-name function + on-demand table creation in `internal/storage/flatsql.go` (producer from peer id/pubkey; standard from FILE_ID). Keep sds.SchemaNameToTable as the standard part. Unit test. [space-data-network]
+- [x] **7.1** `(producer, standard)`→table-name function + on-demand table creation in `internal/storage/producer_standard_tables.go` (`ProducerStandardTableName` = `sds_p_<producer>__<standard>`, sanitized producer + validated `sds.SchemaNameToTable`; `ensureProducerStandardTable` idempotent on-demand create). Unit tests. [space-data-network]
 - [ ] **7.2** Route the store/append/upsert path to the `(producer, standard)` table; migrate startup indexes + source_tags/source_summary keys. Test. [space-data-network]
 - [ ] **7.3** Update record read/query call sites (sds-exchange, flatsql-sync, api, ingest) to cross-table SQL over `(producer, standard)` tables. Batch; build+test after each cluster. [space-data-network]
 - [ ] **7.4** starlink `src/host/storage/flatsql.ts` — route by `(producer, standard)` instead of the fixed `EphemRecord` table; test. [starlink_downloader]
