@@ -13,6 +13,7 @@
  * is de-duplicated.
  */
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { FlatcRunner } from 'flatc-wasm';
 import { FlatcAccessor, StackedFlatBufferStore } from 'flatsql';
@@ -30,7 +31,25 @@ import { childLogger } from '../logger.js';
 
 const log = childLogger({ component: 'flatsql-storage' });
 
-const TABLE = 'EphemRecord';
+/** Schema root type used by the accessor (fixed). */
+const SCHEMA_TYPE = 'EphemRecord';
+/** Standard abbreviation for the EphemRecord table in routed store-table names. */
+const STANDARD_ABBR = 'E';
+
+/**
+ * Route a record to its (producer, standard) store table (WS7.4). Each
+ * producer's records live in their own table rather than one shared table,
+ * while reads span every table (iterateRecords). The StackedFlatBufferStore caps
+ * table names at 15 bytes, so the producer is encoded as a short stable hash —
+ * `E@<12-hex>` (standard 'E' = EphemRecord). Distinct producers yield distinct
+ * tables; the full producer is preserved in each record's `source` field.
+ */
+function producerStandardTable(source: string): string {
+  const producer = (source ?? '').trim() || 'unknown';
+  const hash = createHash('sha256').update(producer).digest('hex').slice(0, 12);
+  return `${STANDARD_ABBR}@${hash}`;
+}
+
 const SCHEMA = `
 table EphemRecord {
   source:string;
@@ -203,7 +222,10 @@ export class FlatSqlStorage implements StorageAdapter {
 
     if (existsSync(this.archivePath)) {
       this.flatStore = StackedFlatBufferStore.fromData(new Uint8Array(readFileSync(this.archivePath)));
-      for (const rec of this.flatStore.iterateTableRecords(TABLE)) {
+      // Records live in per-producer tables (EphemRecord@<producer>) plus, for
+      // legacy archives, the shared EphemRecord table. iterateRecords spans them
+      // all — every record in this store is an EphemRecord.
+      for (const rec of this.flatStore.iterateRecords()) {
         const obj = this.accessor.toJSON(rec.data) as Partial<RecordFields>;
         this.indexSummary(Number(rec.header.sequence), obj);
       }
@@ -242,8 +264,10 @@ export class FlatSqlStorage implements StorageAdapter {
   }
 
   private append(fields: RecordFields): number {
-    const bytes = this.accessor.fromJSON(fields as unknown as Record<string, unknown>, TABLE);
-    this.flatStore.append(TABLE, bytes);
+    const bytes = this.accessor.fromJSON(fields as unknown as Record<string, unknown>, SCHEMA_TYPE);
+    // Route the record to its producer's table. The store assigns a global
+    // sequence across all tables that matches nextSeq (used as the record id).
+    this.flatStore.append(producerStandardTable(fields.source), bytes);
     const seq = this.nextSeq++;
     this.indexSummary(seq, fields);
     this.dirty = true;
@@ -416,7 +440,7 @@ export class FlatSqlStorage implements StorageAdapter {
   async load(recordId: number): Promise<SatelliteEphemeris | null> {
     const summary = this.summaries.find((s) => s.seq === recordId);
     if (!summary) return null;
-    for (const rec of this.flatStore.iterateTableRecords(TABLE)) {
+    for (const rec of this.flatStore.iterateRecords()) {
       if (Number(rec.header.sequence) !== recordId) continue;
       const obj = this.accessor.toJSON(rec.data) as Partial<RecordFields>;
       const oemBytes = Uint8Array.from(obj.oem ?? []);

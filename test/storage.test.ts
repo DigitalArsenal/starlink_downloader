@@ -169,3 +169,64 @@ describe('FlatSqlStorage persistence', () => {
     }
   });
 });
+
+describe('FlatSqlStorage (producer, standard) routing', () => {
+  function ephemFrom(source: string, noradId: number): SatelliteEphemeris {
+    return { ...ephem(noradId, 4), source };
+  }
+
+  it('routes records into per-producer tables and reads across them', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ephem-routing-'));
+    try {
+      const s = new FlatSqlStorage(dir);
+      await s.init();
+
+      await s.store({
+        ephemeris: ephemFrom('spacex-starlink', 301),
+        validation,
+        rawBytes: new TextEncoder().encode('sx'),
+        checksum: 'sx-1',
+        sourceUrl: 'http://sx/1',
+        fetchedAt: '2026-01-01T00:00:00Z',
+        contentExt: 'txt',
+      });
+      await s.store({
+        ephemeris: ephemFrom('celestrak', 302),
+        validation,
+        rawBytes: new TextEncoder().encode('ct'),
+        checksum: 'ct-1',
+        sourceUrl: 'http://ct/1',
+        fetchedAt: '2026-01-01T00:00:00Z',
+        contentExt: 'txt',
+      });
+
+      // Each producer's records live in their own (short-hashed) store table.
+      const store = (s as unknown as {
+        flatStore: { iterateRecords(): Iterable<{ header: { tableName: string } }> };
+      }).flatStore;
+      const tables = new Set<string>();
+      for (const rec of store.iterateRecords()) tables.add(rec.header.tableName);
+      expect(tables.size).toBe(2); // two producers -> two distinct tables
+      for (const t of tables) expect(t.startsWith('E@')).toBe(true);
+
+      // Reads span every producer table.
+      const sources = await s.listSources();
+      expect(sources.map((x) => x.source).sort()).toEqual(['celestrak', 'spacex-starlink']);
+      const sx = await s.latest(301);
+      const ct = await s.latest(302);
+      expect((await s.load(sx!.id))?.source).toBe('spacex-starlink');
+      expect((await s.load(ct!.id))?.source).toBe('celestrak');
+      await s.close();
+
+      // Reload rebuilds the index across producer tables.
+      const s2 = new FlatSqlStorage(dir);
+      await s2.init();
+      expect((await s2.listSources()).length).toBe(2);
+      expect(await s2.latest(301)).not.toBeNull();
+      expect(await s2.latest(302)).not.toBeNull();
+      await s2.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
