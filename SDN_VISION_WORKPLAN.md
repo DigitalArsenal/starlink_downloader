@@ -38,7 +38,7 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 - [ ] **3.2** Port the `flowrt` linked-direct runtime to the SDK/JS so the same flow composes in the browser harness; test. [space-data-module-sdk]
 
 ## WS2b — secp256k1 ECIES encryption (default X25519)
-- [ ] **2b.1** Spec + EPM key: define secp256k1 ECIES (ephemeral ECDH + HKDF-SHA256 + AES-256-GCM); add a secp256k1 **encryption** CryptoKey to the node/wallet EPM (Go `epm/service.go`, `sdn-js` peer-identity). Test EPM carries both x25519 + secp256k1 encryption keys.
+- [x] **2b.1** Spec + EPM key: secp256k1 ECIES = ephemeral secp256k1 ECDH + HKDF-SHA256 + AES-256-GCM (mirrors the X25519 envelope; ADDRESS_TYPE discriminates). Primary (xpub-derived) EPM path now advertises **both** encryption CryptoKeys (secp256k1 already present; added x25519 from the identity's X25519 key). Test parses the built EPM flatbuffer + asserts both encryption curves. *(Identity-fallback path secp256k1 encryption + wallet-side derivation → 2b.2.)* [space-data-network]
 - [ ] **2b.2** Implement secp256k1 ECIES wrap/unwrap dispatch on the recipient encryption-key curve (default X25519): Go `internal/license/plugins.go` BuildPluginKeyEnvelope/Decrypt; test. [space-data-network]
 - [ ] **2b.3** C++ ECIES: `licensing/core` key_server (wrap) + `client-decrypt`/`delivery/plugin-delivery` (unwrap) secp256k1 path; native test; rebuild wasm. [space-data-network-modules]
 - [ ] **2b.4** SDK/wallet ECIES + cross-runtime test (wrap-for-secp256k1-recipient on one runtime → unwrap on another). [space-data-module-sdk + hd-wallet-wasm]
