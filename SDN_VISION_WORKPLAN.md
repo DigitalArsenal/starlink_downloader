@@ -18,7 +18,7 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 
 ## WS4 — Dependency resolver (decentralized package manager)
 - [x] **4.1** Emit `PLG.DEPENDENCIES` on the wire (Go): add a `Dependencies []PluginDependency` field to `PluginCatalogEntry`/`PluginAsset`/`EncryptedPluginUpload`/`ModulePublishEntry` (internal/license), and `PLGAddDEPENDENCIES(...)` in `buildPublicationDescriptorFrame` (internal/node/licensing_bootstrap.go); normalize + PLG round-trip test. [space-data-network]
-- [ ] **4.2** Go dependency **resolver** lib: `ResolveClosure(plg, registry)` — read `PLG.DEPENDENCIES()`, diff vs installed registry, semver MIN/MAX satisfaction, cycle detection, topo order. Unit tests. [space-data-network new `internal/deps`]
+- [x] **4.2** Go dependency **resolver** lib: `ResolveClosure(plg, registry)` — read `PLG.DEPENDENCIES()`, diff vs installed registry, semver MIN/MAX satisfaction, cycle detection, topo order. Unit tests. [space-data-network new `internal/deps`]
 - [ ] **4.3** Go delivery **consumer**: a client that runs challenge→proof→grant→fetch→`client-decrypt` against a remote provider (the Go equivalent of `sdn-js` requestModuleGrant). Test against a local in-process provider. [space-data-network internal/license]
 - [ ] **4.4** Wire **install→resolve→pull→register**: activate the dead `registerCatalogPlugins` (node.go:635); on install of module A, resolve deps (4.2), pull each missing via 4.3, register into `plugins.Manager`, recurse to a fixpoint. Integration test. [space-data-network internal/node]
 - [ ] **4.5** Browser resolver: `sdn-js` installed-module registry + persistence + the recursive fetch-dep→decrypt→register loop reusing `requestEncryptedModuleBundle` + `live-delivery`. Test. [sdn-js]
