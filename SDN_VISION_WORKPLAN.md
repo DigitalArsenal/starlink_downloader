@@ -1,0 +1,60 @@
+# SDN Full-Vision Workplan (loop-executable)
+
+Goal: installable WASM modules + a decentralized dependency package-manager, with
+**Go/Kubo node ⇄ browser/Helia node parity**, dual-curve identity, real composition,
+and PNM+streaming data. Context + audit facts live in memory `sdn-full-vision-plan`.
+
+## LOOP PROTOCOL (read every iteration)
+1. Read memory `sdn-full-vision-plan` (+ `sdn-module-delivery-pki-map`) for context.
+2. Find the **first** unchecked `[ ]` task below. Do **only that one task**. Do not skip ahead; tasks are dependency-ordered.
+3. Acceptance for EVERY task: relevant package **builds clean** + **tests green** + **committed & pushed** to the component repo, then mark the box `[x]` in this file and commit this file. One task = one iteration; then stop. **Push every task** (no batching; the user reviews after pushes). Browser/Helia tasks (WS6, and any browser E2E) require **REAL in-browser verification** — drive an actual browser via the `chrome-devtools` MCP (navigate_page/evaluate_script/list_console_messages), not a jsdom/node stub. A task that can only be unit-tested is NOT done until its in-browser E2E passes.
+4. If a task is genuinely blocked, mark it `[!]` with a one-line reason, and take the next unblocked task.
+5. Env: WasmEdge CGO — `export CGO_CFLAGS="-I$HOME/.wasmedge/include"; export CGO_LDFLAGS="-L$HOME/.wasmedge/lib -lwasmedge -Wl,-rpath,$HOME/.wasmedge/lib"; export DYLD_FALLBACK_LIBRARY_PATH="$HOME/.wasmedge/lib"`. Go pushes: `SKIP_LOCAL_CI=1` (pre-existing webui test fails). Canonical module repo = **space-data-network-modules** (not the stale -plugins). secp256k1 sig scheme = ECDSA-DER over sha256(canonical JCS content), default ed25519.
+6. When a component repo commit lands, bump its submodule pin (OrbPro/orbpro-stack) as part of the same task if applicable.
+
+Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-modules` (WASM modules), `space-data-module-sdk`, `hd-wallet-wasm`, `spacedatastandards.org`, `flatsql`, `space-data-network-closed-modules`.
+
+---
+
+## WS4 — Dependency resolver (decentralized package manager)
+- [x] **4.1** Emit `PLG.DEPENDENCIES` on the wire (Go): add a `Dependencies []PluginDependency` field to `PluginCatalogEntry`/`PluginAsset`/`EncryptedPluginUpload`/`ModulePublishEntry` (internal/license), and `PLGAddDEPENDENCIES(...)` in `buildPublicationDescriptorFrame` (internal/node/licensing_bootstrap.go); normalize + PLG round-trip test. [space-data-network]
+- [ ] **4.2** Go dependency **resolver** lib: `ResolveClosure(plg, registry)` — read `PLG.DEPENDENCIES()`, diff vs installed registry, semver MIN/MAX satisfaction, cycle detection, topo order. Unit tests. [space-data-network new `internal/deps`]
+- [ ] **4.3** Go delivery **consumer**: a client that runs challenge→proof→grant→fetch→`client-decrypt` against a remote provider (the Go equivalent of `sdn-js` requestModuleGrant). Test against a local in-process provider. [space-data-network internal/license]
+- [ ] **4.4** Wire **install→resolve→pull→register**: activate the dead `registerCatalogPlugins` (node.go:635); on install of module A, resolve deps (4.2), pull each missing via 4.3, register into `plugins.Manager`, recurse to a fixpoint. Integration test. [space-data-network internal/node]
+- [ ] **4.5** Browser resolver: `sdn-js` installed-module registry + persistence + the recursive fetch-dep→decrypt→register loop reusing `requestEncryptedModuleBundle` + `live-delivery`. Test. [sdn-js]
+
+## WS5 — Executable data-source WASM module (reference: spacex-starlink)
+- [ ] **5.1** Manifest + skeleton: a `spacex-starlink-source` WASM module (C++, in space-data-network-modules) — manifest declares PLUGIN_TYPE=DataSource, `TIMERS` (a `pull` method), host-caps HTTP/STORAGE_WRITE/PUBSUB/CRYPTO_SIGN, and DEPENDENCIES on starlink-parser/validator. Build the empty module, structural test.
+- [ ] **5.2** Implement discover+fetch in the module's `pull` (port `starlink-parser`/JS-provider discover logic; HTTP host-cap for MANIFEST + files; hash). Build; run under the Go node once; assert resources discovered.
+- [ ] **5.3** Wire store + sign + publish in `pull`: STORAGE_WRITE the fetched records, CRYPTO_SIGN a PNM, PUBSUB publish + stream. Build; test.
+- [ ] **5.4** Run under the Go node **cron** (TIMERS-driven); assert it pulls→stores→signs-PNM→publishes on schedule. Commit the module + declare it in closed-modules with its dependency graph.
+
+## WS3 — Composition (shared-mem aligned-binary via flowrt)
+- [ ] **3.1** Build a Go **flow artifact** linking `spacex-starlink-source → starlink-parser → validator` via `flowrt` linked-direct (zero host-copy, aligned-binary shared memory); test on the Go node. [space-data-network internal/flowrt + modules]
+- [ ] **3.2** Port the `flowrt` linked-direct runtime to the SDK/JS so the same flow composes in the browser harness; test. [space-data-module-sdk]
+
+## WS2b — secp256k1 ECIES encryption (default X25519)
+- [ ] **2b.1** Spec + EPM key: define secp256k1 ECIES (ephemeral ECDH + HKDF-SHA256 + AES-256-GCM); add a secp256k1 **encryption** CryptoKey to the node/wallet EPM (Go `epm/service.go`, `sdn-js` peer-identity). Test EPM carries both x25519 + secp256k1 encryption keys.
+- [ ] **2b.2** Implement secp256k1 ECIES wrap/unwrap dispatch on the recipient encryption-key curve (default X25519): Go `internal/license/plugins.go` BuildPluginKeyEnvelope/Decrypt; test. [space-data-network]
+- [ ] **2b.3** C++ ECIES: `licensing/core` key_server (wrap) + `client-decrypt`/`delivery/plugin-delivery` (unwrap) secp256k1 path; native test; rebuild wasm. [space-data-network-modules]
+- [ ] **2b.4** SDK/wallet ECIES + cross-runtime test (wrap-for-secp256k1-recipient on one runtime → unwrap on another). [space-data-module-sdk + hd-wallet-wasm]
+
+## WS7 — FlatSQL `(producer, standard)` table routing (50-file blast radius)
+- [ ] **7.1** `(producer, standard)`→table-name function + on-demand table creation in `internal/storage/flatsql.go` (producer from peer id/pubkey; standard from FILE_ID). Keep sds.SchemaNameToTable as the standard part. Unit test. [space-data-network]
+- [ ] **7.2** Route the store/append/upsert path to the `(producer, standard)` table; migrate startup indexes + source_tags/source_summary keys. Test. [space-data-network]
+- [ ] **7.3** Update record read/query call sites (sds-exchange, flatsql-sync, api, ingest) to cross-table SQL over `(producer, standard)` tables. Batch; build+test after each cluster. [space-data-network]
+- [ ] **7.4** starlink `src/host/storage/flatsql.ts` — route by `(producer, standard)` instead of the fixed `EphemRecord` table; test. [starlink_downloader]
+- [ ] **7.5** Cross-table query surface (e.g. "all OMM across producers", "all from producer X") + tests. [space-data-network]
+
+## WS6 — Helia (browser) node parity (XL) — REAL in-browser E2E required (chrome-devtools MCP)
+- [ ] **6.1** Async in-WASM host bridge (SharedArrayBuffer + `Atomics.wait` worker) in the SDK browser harness so guest modules can call http/ipfs/storage/pubsub (today the sync bridge throws). Test. [space-data-module-sdk]
+- [ ] **6.2** Wire Helia(`ipfs`)/FlatSQL(`storage_*`)/`pubsub`/`wallet_sign` host adapters into `createBrowserModuleHarness` (today none are wired). Test. [space-data-module-sdk + sdn-js]
+- [ ] **6.3** Browser cron/timer driver: manifest `TIMERS` → interval → `plugin_invoke_stream` (today `host/cron.js` only parses). Test. [sdn-js/sdk]
+- [ ] **6.4** Browser installed-module **registry + lifecycle + persistence** (cache decrypted bytes+manifest, dedupe id/version, start/stop). [sdn-js]
+- [ ] **6.5** FlatSQL **store-of-record** on Helia: wire `space-data-module-sdk/runtime-host/flatsqlRuntimeStore.js`; migrate the node off IndexedDB (`sdn-js/src/storage.ts`). [sdn-js]
+- [ ] **6.6** PNM **signing + publish** on Helia (encode+sign PNM FlatBuffer, publish topic) — today Helia only subscribes/decodes. [sdn-js]
+- [ ] **6.7** End-to-end: install `spacex-starlink-source` on a Helia node → it downloads + stores + PNM-publishes **in-browser**, deps auto-installed via WS4.5. Integration test.
+
+## WS8 — Cleanup
+- [ ] **8.1** Delete the JS `*-provider` packages (17 ported + pre-existing celestrak/sdn-publisher) now WASM data-source modules exist (WS5). [space-data-network-closed-modules]
+- [ ] **8.2** Final sweep: bump all submodule pins; full suites green across repos; update memory `sdn-full-vision-plan` to DONE.
