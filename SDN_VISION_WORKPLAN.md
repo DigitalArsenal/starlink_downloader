@@ -45,7 +45,7 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 
 ## WS7 — FlatSQL `(producer, standard)` table routing (50-file blast radius)
 - [x] **7.1** `(producer, standard)`→table-name function + on-demand table creation in `internal/storage/producer_standard_tables.go` (`ProducerStandardTableName` = `sds_p_<producer>__<standard>`, sanitized producer + validated `sds.SchemaNameToTable`; `ensureProducerStandardTable` idempotent on-demand create). Unit tests. [space-data-network]
-- [ ] **7.2** Route the store/append/upsert path to the `(producer, standard)` table; migrate startup indexes + source_tags/source_summary keys. Test. [space-data-network]
+- [x] **7.2** Routed write path `StoreRoutedByProducer` — the `(producer, standard)` counterpart of `Store` (ensures the producer table, appends to the shared stream, updates the record index; row lands in `sds_p_<producer>__<standard>`). Additive (existing `Store` unchanged so readers keep working until 7.3); tested for producer separation + idempotency. *(Flipping the default write path + migrating source_tags/source_summary keys folds into 7.3.)* [space-data-network]
 - [ ] **7.3** Update record read/query call sites (sds-exchange, flatsql-sync, api, ingest) to cross-table SQL over `(producer, standard)` tables. Batch; build+test after each cluster. [space-data-network]
 - [ ] **7.4** starlink `src/host/storage/flatsql.ts` — route by `(producer, standard)` instead of the fixed `EphemRecord` table; test. [starlink_downloader]
 - [ ] **7.5** Cross-table query surface (e.g. "all OMM across producers", "all from producer X") + tests. [space-data-network]
