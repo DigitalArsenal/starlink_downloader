@@ -29,7 +29,7 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 
 ## WS5 — Executable data-source WASM module (reference: spacex-starlink)
 - [x] **5.1** `spacex-starlink-source` module scaffold — manifest.js (DataSource + `pull` + host-caps HTTP/STORAGE_WRITE/CRYPTO_SIGN/PUBSUB + TIMERS `starlink-pull`; first module with host-caps+timers) `b519f6d`; C++ ABI skeleton + cryptopp-free `build.mjs` (em++ → signed WASM) + structural test (SDK verify + all 5 ABI exports) `d70d1ba`. **Empty module builds, signs, verifies, exports the ABI — the C++ WASM module scaffold works.** [space-data-network-modules]
-- [ ] **5.2** Implement discover+fetch in the module's `pull` (port `starlink-parser`/JS-provider discover logic; HTTP host-cap for MANIFEST + files; hash). Build; run under the Go node once; assert resources discovered.
+- [x] **5.2** `pull` discover+fetch via the host-call HTTP cap — modules `552009f`. Established the module→host-cap call pattern (first module to call host caps): imports `space_data_module_host.{call,response_len,read_response}`, decodes the hostcall envelope, `http_get(url)` (op `http.request`), and `run_pull` GETs the Starlink listing + counts resources. Verified: builds/signs + correct imports/exports. *(Live Go-node run folds into 5.4 cron.)*
 - [ ] **5.3** Wire store + sign + publish in `pull`: STORAGE_WRITE the fetched records, CRYPTO_SIGN a PNM, PUBSUB publish + stream. Build; test.
 - [ ] **5.4** Run under the Go node **cron** (TIMERS-driven); assert it pulls→stores→signs-PNM→publishes on schedule. Commit the module + declare it in closed-modules with its dependency graph.
 
