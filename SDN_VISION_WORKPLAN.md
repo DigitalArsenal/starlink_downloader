@@ -75,5 +75,31 @@ Repos: `space-data-network` (Go `sdn-server` + `sdn-js`), `space-data-network-mo
 
 ---
 
-## PROGRAM STATUS (2026-07-02): all non-gated work COMPLETE.
-Remaining items are design-gated and documented above: **7.3d** (legacy-table retirement — protocol-versioned datasync cursor redesign), **2b.3-crypto/2b.4** (secp256k1 ECIES — envelope-format unification design). Pre-existing failures not from this program: Go stale-licensing-artifact test; SDK SCV-catalog test; licensing/core wasm still embeds a 1.133-layout manifest (rebuild on next licensing touch).
+## PROGRAM STATUS (2026-07-02): original vision COMPLETE; new workstreams WS9–WS12 added (user 2026-07-02).
+Pre-existing failures not from this program: Go stale-licensing-artifact test; SDK SCV-catalog test; licensing/core wasm still embeds a 1.133-layout manifest (rebuild on next licensing touch). WS7.3d + unified-ECIES (2b) are IN PROGRESS above; WS9–WS12 below are the new user-requested features. **Loop order for the new work: finish WS7.3d → 2b unified ECIES → WS10 (one-to-many, builds on ECIES) → WS9 (encrypted chat, builds on one-to-many) → WS11 (trust graph) → WS12 (JS harness port).**
+
+---
+
+## WS9 — Encrypted pub/sub channel chat (user 2026-07-02)
+Group chat over gossipsub channel topics with end-to-end encryption. Build on the unified ECIES (2b) + one-to-many wrap (WS10). SDS `CHN` (Channel) schema exists. Both runtimes (Go `internal/node` already has a Chat stream handler; sdn-js).
+- [ ] **9.1** Channel model + key management: a channel has a symmetric content key; membership = set of member identity pubkeys; the channel key is wrapped one-to-many (WS10) to each member's X25519/secp256k1 key via `$ENC`/`$KMF`. Rekey on membership change. [space-data-network Go + sdn-js]
+- [ ] **9.2** Encrypted message publish/subscribe on the channel's gossipsub topic (message body AES-256-GCM under the channel key; sender-signed). Decrypt on receive for members; non-members can't read. Go + sdn-js, cross-runtime message vector. [space-data-network]
+- [ ] **9.3** In-browser E2E (chrome-devtools): two browser members exchange encrypted messages over real gossipsub; a non-member sees ciphertext only. [sdn-js]
+
+## WS10 — Storefront one-to-many encryption (user 2026-07-02)
+Encrypt content ONCE; deliver to many buyers by wrapping the single content key per-recipient (no content re-encryption per sale). AUDIT FIRST: storefront already does per-buyer ECIES delivery (`internal/storefront/delivery.go`, doc says "ECIES-encrypted data delivery to buyers") and licensing/core `wrap_content_key_for_requester` wraps per requester — confirm whether that already IS one-to-many (one content key, N wraps) or re-encrypts per buyer.
+- [ ] **10.1** Audit + spec: is content encrypted once with a stable content key and only the key wrapped per buyer? If yes, document + add a multi-recipient conformance test. If no, refactor to single-encrypt + per-recipient `$ENC`/`$KMF` key wrap (the unified ECIES multi-recipient form: one content key → N wrapped-key envelopes). [space-data-network]
+- [ ] **10.2** Multi-recipient wrap primitive in the unified ECIES (Go + SDK): `WrapForRecipients(contentKey, []recipientPub) → []ENC/KMF` (or one $ENC carrying N wrapped keys keyed by RECIPIENT_KEY_ID); each recipient unwraps independently. Cross-runtime vector. [space-data-network + space-data-module-sdk]
+
+## WS11 — Trust graph (DAG) + web-of-trust API (user 2026-07-02)
+New subsystem: a directed ACYCLIC graph of trust edges with computed trust scores and live re-evaluation. LARGE — decompose:
+- [ ] **11.1** DAG core (`internal/trust`): node/edge model, acyclicity enforcement (reject edges that create a cycle), topological traversal, persistence (FlatSQL). Unit tests. [space-data-network]
+- [ ] **11.2** Trust scoring inputs: funds-at-location, fund TYPE weighting (stablecoin vs BTC/ETH/other — configurable weights), count of other nodes that trust a node (total) AND count among already-trusted nodes, total trusted amount AND amount among-already-trusted. Pluggable scoring function combining these. Unit tests over fixtures. [space-data-network]
+- [ ] **11.3** On-the-fly recompute: when a node's funds/fund-type/trusting-set changes, recompute affected scores (incremental over the DAG) and flip trust status at thresholds. [space-data-network]
+- [ ] **11.4** Web-of-trust pub/sub events: when a node's trust status changes, publish an event to the gossipsub topics of nodes WITHIN that node's web of trust (the DAG neighborhood). Event schema (SDS if one fits, else new). [space-data-network]
+- [ ] **11.5** API for complex trust queries (funds/type/counts/amounts/among-trusted predicates); expose over the node HTTP API. Tests. [space-data-network]
+
+## WS12 — Port the orbpro-integration WasmEdge-mirror JS harness into the SDK (user 2026-07-02)
+`orbpro-integration/sdk/src/runtime/` (FlowRuntime.js, compiledFlowHost.js, MethodRegistry.js, sdnCompat.js, sdnShimGenerator.js, wasmCompatibility.js, streamBridge.js, codec.js, host/) is a JS harness mirroring the WasmEdge interface. Port it into `space-data-module-sdk` as THE canonical JS/TS harness (all other languages use the WasmEdge runtime natively).
+- [ ] **12.1** Audit + language matrix: which languages run modules on WasmEdge NATIVE (Go/Rust/C/C++/Python via WasmEdge bindings) vs need a non-WasmEdge harness (JS/TS in the BROWSER — WasmEdge is native, can't run in-browser → the JS harness; Node could use WasmEdge napi but the browser cannot). Produce the definitive list of languages needing the JS-style harness. [docs]
+- [ ] **12.2** Port the runtime harness modules from orbpro-integration/sdk/src/runtime into space-data-module-sdk (dedupe against the WS3.2 `createFlowRuntimeHost` + WS6.1 worker harness already there; unify, don't duplicate), with tests. Deprecate the orbpro-integration copy (re-export or delete). [space-data-module-sdk + orbpro-integration]
