@@ -130,3 +130,15 @@ phase-1 capability gaps; the host does not replace missing WASM with JS physics.
 
 Counts distinguish fetched files from identified objects. A fleet without a
 WASM parser has an unknown object count, never an invented successful count.
+
+## CelesTrak through Tor (firewall recovery)
+
+This network is currently blocked by CelesTrak's firewall: TCP 443 times out, for reasons unrelated to our request behavior. `--celestrak-via tor` sends only the CelesTrak supplemental-GP requests through a local Tor SOCKS proxy (`brew services start tor`; override the address with `TEST_RETRIEVER_TOR_SOCKS`). Operator sources are always fetched directly.
+
+Tor restores reachability. It is **not** a way around rate limits. Every rule in `CELESTRAK_FETCH_POLICY.md` applies unchanged:
+
+- requests are serial, at least 2.5 s apart;
+- the same URL is never requested twice within 3 hours;
+- on 429 or 503, back off 60 s and retry at most once;
+- the run stops after 30 consecutive failures.
+

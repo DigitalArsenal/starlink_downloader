@@ -124,3 +124,16 @@ test('WASM failure sentinels cannot be reported as successful fits', () => {
   assert.match(fitFailure(NaN), /non-finite/);
   assert.equal(fitFailure(0.101), null);
 });
+
+test('CelesTrak over Tor keeps the policy and parses curl status', async () => {
+  const { parseArgs } = await import('../bin/retrieve.mjs');
+  const { curlArgs, torFetch } = await import('../lib/tor.mjs');
+  assert.equal(parseArgs(['--celestrak-via', 'tor']).celestrakVia, 'tor');
+  assert.throws(() => parseArgs(['--celestrak-via', 'proxy']), /direct or tor/);
+  assert.deepEqual(curlArgs('https://x/y', '127.0.0.1:9050').slice(0, 3), ['-sS', '--socks5-hostname', '127.0.0.1:9050']);
+  const fake = (cmd, args, opts, cb) => { cb(null, Buffer.from('[{"NORAD_CAT_ID":1}]\n200')); return { kill() {} }; };
+  const response = await torFetch('https://celestrak.org/x', { run: fake });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), [{ NORAD_CAT_ID: 1 }]);
+});
+

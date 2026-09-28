@@ -1,14 +1,16 @@
 import { sources, anonymous, getSource } from '../getters/index.mjs';
 import { Processor } from './process.mjs';
 import { Celestrak, groups } from './celestrak.mjs';
+import { torFetch } from './tor.mjs';
 import { compare } from './compare.mjs';
 import { Output, summarize } from './output.mjs';
 export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, out,
-  supgp = true, fetchImpl = fetch, onProgress = () => {} }) {
+  supgp = true, celestrakVia = 'direct', fetchImpl = fetch, onProgress = () => {} }) {
+  if (!['direct', 'tor'].includes(celestrakVia)) throw new Error('celestrakVia must be direct or tor');
   const selected = sourceIds.map(id => { const source = sources.find(s => s.id === id); if (!source) throw new Error(`Unknown source: ${id}`); return source; });
   const output = await Output.create(out);
   const processor = new Processor();
-  const celestrak = new Celestrak(output.dir, { fetchImpl });
+  const celestrak = new Celestrak(output.dir, { fetchImpl: celestrakVia === 'tor' ? torFetch : fetchImpl });
   const start = Date.now();
   const report = { startedAt: new Date(start).toISOString(), durationMs: 0, artifacts: [], sources: [] };
   try {
