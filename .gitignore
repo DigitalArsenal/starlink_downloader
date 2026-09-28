@@ -19,3 +19,13 @@ bundles/
 
 # AOT cache for reused external (orbpro-stack) modules
 .external-cache/
+
+# test-retriever: all runtime data belongs outside this repository.
+/test-retriever/out/
+/test-retriever/runs/
+/operator-od/
+*.fsb
+celestrak-ledger.json*
+supgp-*.json
+summary.md
+comparison.jsonl
