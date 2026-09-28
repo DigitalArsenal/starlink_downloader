@@ -6,15 +6,14 @@
  *   norad_tle/<CODE>.TLE
  *   centerofbox/<CODE>_MID.TXT
  */
-                                                      
-                                                                 
+
 import { scrapeHrefs } from './util.mjs';
 
 const INDEX =
   'https://www.ses.com/network-and-technology/technical-data-and-tools/satellite-orbital-data';
 const BUCKET = 'ses-satellite-orbital-data-public';
 
-export const sesSource                  = {
+export const sesSource= {
   id: 'ses',
   name: 'SES',
   operator: 'SES S.A.',
@@ -22,7 +21,7 @@ export const sesSource                  = {
   contentExt: 'i11',
   host: 'ses-satellite-orbital-data-public.s3.eu-west-1.amazonaws.com',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const html = await ctx.http.getText(INDEX);
     const links = scrapeHrefs(html).filter(
       (h) => h.includes(BUCKET) && h.includes('/ephemeris/') && h.endsWith('.I11'),

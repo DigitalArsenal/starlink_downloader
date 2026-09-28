@@ -1,3 +1,4 @@
+import { fitFailure } from './process.mjs';
 import { ommBytes } from './products.mjs';
 export const RMS_THRESHOLD_KM = 1;
 export const MAX_EPOCH_DIFFERENCE_SEC = 11520;
@@ -43,8 +44,8 @@ export async function compare(processor, item, fitted, references) {
   }
   // No JS propagation, frames, residual calculation or orbital element deltas.
   // The module scores its fit and the reference against exactly the same fit samples.
-  const scored = await processor.textFit(item.bytes, { ...fitted.options, ...referenceOptions(match.row) });
-  if (!Number.isFinite(Number(scored.REFERENCE_RMS))) throw new Error('OD artifact did not return reference RMS');
+  const scored = await processor.textFit(fitted.scoringBytes ?? item.bytes, { ...fitted.options, ...referenceOptions(match.row) });
+  if (scored.REFERENCE_RMS === undefined || fitFailure(scored.REFERENCE_RMS)) throw new Error('OD artifact did not return a valid reference RMS (missing or propagation failed)');
   if (Number(scored.RMS) !== record.ourRmsKm) throw new Error('Reference scoring changed the fitted RMS');
   record.supgpRmsKm = Number(scored.REFERENCE_RMS);
   record.verdict = Math.abs(record.ourRmsKm - record.supgpRmsKm) <= RMS_THRESHOLD_KM ? 'AGREE' : 'DISAGREE';

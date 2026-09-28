@@ -7,7 +7,7 @@ node --test test-retriever/test/*.test.mjs
 ```
 
 Node 22+; this folder has its own lockfile and uses only published npm packages:
-SDK 0.8.24, SDS 1.228.0, FlatBuffers 25.9.23. It does not import the legacy host
+SDK 0.8.24, SDS 1.228.0, FlatBuffers 25.9.23, and fflate 0.8.3 (in-memory ZIP containers). It does not import the legacy host
 or its file-linked SDK dependency. No native module build is necessary.
 
 CLI: `--source <id>` is repeatable; omitted selects all twelve anonymous sources.
@@ -53,6 +53,9 @@ worker harness. No host network/filesystem capabilities are supplied to OD.
   streams. It is used for GLONASS SP3, Intelsat ECF, and CPF. Decompression is
   in memory. One object can emit several epochs; only its first is retained.
   Pending objects beyond the limit are discarded when the worker is destroyed.
+  The 1,000,000 km propagation-failure sentinel is rejected, not counted as a fit.
+  GLONASS/Intelsat parsers do not supply NORAD identity: internal 99999/99999A
+  seed labels are cleared to unknown, never joined to SupGP.
 
 ## Coverage and current contract gaps
 
@@ -69,7 +72,7 @@ worker harness. No host network/filesystem capabilities are supplied to OD.
 | planet | .states | no WASM parser |
 | ses | I11 | no WASM parser |
 | telesat | center-of-box CSV | no WASM parser; not full state vectors |
-| css-tiangong | weekly OEM ZIP | ZIP not accepted; supplemental OEM parser hardcodes ISS |
+| css-tiangong | weekly OEM ZIP | first OEM member decompressed in memory, then standalone OEM fit/reference score |
 
 `spire`, `vimpel`, `cpf-edc`, `space-track` are explicit inert phase-1 getters,
 including when credentials exist: zero objects, a note, no credential access.
@@ -89,6 +92,10 @@ Successful SupGP JSON (GP, not operator ephemeris) is cached and reused. Missing
 cache does not override the ledger. A 429/503 allows one retry after 60 seconds;
 30 consecutive failures halt further CelesTrak requests. There is no bypass flag.
 Keep one output/cache directory when repeating a run inside three hours.
+
+CSS ZIP expansion is bounded to 128 MiB; only the first OEM KVN member is
+used. The standalone parser reads its own frame/time header; the ISS-specific
+supplemental parser is not used for CSS.
 
 For MEME/OEM, the closest SupGP epoch for the same NORAD must be within 11,520 s.
 While the same operator bytes remain in memory, the module refits with `refEpoch`,

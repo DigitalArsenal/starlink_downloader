@@ -43,7 +43,7 @@ export class Celestrak {
       await save(); // Reserve before network I/O, including failures/crashes.
       let response;
       try { response = await this.fetchImpl(url, { signal: AbortSignal.timeout(60_000) }); }
-      catch (error) { this.failures++; throw new Error(`CelesTrak network failure: ${error.message}`); }
+      catch (error) { this.failures++; throw new Error(`CelesTrak network failure: ${error.message}${error.cause?.code ? ` (${error.cause.code})` : ''}`); }
       if (response.status !== 200) {
         await response.body?.cancel(); this.failures++;
         if (this.failures >= 30) throw new Error('CelesTrak halted after 30 consecutive failed requests');
@@ -52,7 +52,7 @@ export class Celestrak {
       }
       let rows;
       try { rows = await response.json(); if (!Array.isArray(rows)) throw new Error('Expected OMM array'); }
-      catch (error) { this.failures++; throw new Error(`Invalid CelesTrak JSON: ${error.message}`); }
+      catch (error) { this.failures++; throw new Error(`Invalid CelesTrak JSON: ${error.message}${error.cause?.code ? ` (${error.cause.code})` : ''}`); }
       await writeFile(cachedPath, JSON.stringify(rows));
       ledger[url] = { at: this.now(), success: true }; await save(); this.failures = 0;
       return { rows, url, cached: false };

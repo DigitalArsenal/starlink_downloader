@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, mkdtemp, readdir, rm, unlink, symlink } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Processor } from '../lib/process.mjs';
+import { Processor, fitFailure } from '../lib/process.mjs';
 import { readFB } from '../lib/products.mjs';
 import { compare, closestReference } from '../lib/compare.mjs';
 import { Celestrak, THREE_HOURS } from '../lib/celestrak.mjs';
@@ -100,7 +100,7 @@ test('credentialed getters are inert and discovery failure does not stop other s
   const result = await run({ out, supgp: false, sourceIds: ['spacex-starlink', 'spire', 'vimpel', 'cpf-edc', 'space-track'],
     fetchImpl: async () => { calls++; return new Response('', { status: 404 }); } });
   assert.equal(calls, 1); assert.equal(result.sources.length, 5);
-  assert.match(result.sources[0].notes[0], /Discovery failed.*404/);
+  assert.ok(result.sources[0].notes.some(note => /Discovery failed.*404/.test(note)));
   for (const source of result.sources.slice(1)) { assert.equal(source.fetched, 0); assert.match(source.notes[0], /inert/); }
 });
 test('Starlink range refusal fails closed and CLI limits are explicit', async () => {
@@ -108,4 +108,19 @@ test('Starlink range refusal fails closed and CLI limits are explicit', async ()
   assert.equal(parseArgs([]).limit, 50); assert.equal(parseArgs(['--all']).limit, Infinity);
   assert.throws(() => parseArgs(['--all', '--limit', '10']), /mutually exclusive/);
   assert.throws(() => parseArgs(['--limit', '0']), /positive/);
+});
+
+// Archive helpers are container/network plumbing; the only payload here is a synthetic format marker.
+test('CSS archive extraction stays in memory and selects OEM KVN', async () => {
+  const { zipSync, strToU8 } = await import('fflate');
+  const { firstOemInZip } = await import('../lib/containers.mjs');
+  const bytes = firstOemInZip(zipSync({ 'readme.txt': strToU8('format notes'), 'orbit.txt': strToU8('CCSDS_OEM_VERS = 2.0\n') }));
+  assert.match(Buffer.from(bytes).toString(), /^CCSDS_OEM_VERS/);
+  assert.throws(() => firstOemInZip(zipSync({ 'x.txt': strToU8('not OEM') })), /no OEM/);
+});
+
+test('WASM failure sentinels cannot be reported as successful fits', () => {
+  assert.match(fitFailure(1000000), /propagation-failure sentinel/);
+  assert.match(fitFailure(NaN), /non-finite/);
+  assert.equal(fitFailure(0.101), null);
 });

@@ -18,10 +18,12 @@ export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, ou
         ourRms: [], pairedOurRms: [], supgpRms: [], disagreements: 0, disagreementDetails: [], notes: [], durationMs: 0 };
       report.sources.push(stats); onProgress(`Starting ${source.id}`);
       let references = supgp ? [] : null;
+      let referenceGroupsLoaded = 0;
       if (supgp) for (const group of groups[source.id] ?? []) {
-        try { references.push(...(await celestrak.get(group)).rows); }
+        try { references.push(...(await celestrak.get(group)).rows); referenceGroupsLoaded++; }
         catch (error) { if (celestrak.failures >= 30) throw error; stats.notes.push(`${group} SupGP: ${error.message}`); }
       }
+      if (!referenceGroupsLoaded) references = null;
       let queue = Promise.resolve();
       try { await getSource(source, { limit, fetchImpl, note: note => stats.notes.push(note), consume: item => {
         const work = queue.then(async () => {
@@ -37,7 +39,14 @@ export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, ou
             return;
           }
           if (fleet) { stats.fetched += fitted.length; stats.unknownObjects = false; }
-          for (const fit of fitted) {
+          try { for (const fit of fitted) {
+            if (fit.failure) {
+              stats.notes.push(fit.failure);
+              await output.append('comparison.jsonl', JSON.stringify({ version: 1, source: source.id,
+                noradCatId: fit.fit.NORAD_CAT_ID, objectName: fit.fit.OBJECT_NAME, provenance: item.provenance,
+                verdict: 'NOT_FITTED', moduleRmsKm: fit.fit.RMS, note: fit.failure }) + '\n');
+              continue;
+            }
             await output.products(fit.products); stats.fitted++; stats.ourRms.push(Number(fit.fit.RMS));
             let comparison;
             try { comparison = await compare(processor, item, fit, references); }
@@ -53,7 +62,7 @@ export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, ou
             if (comparison.record.verdict === 'DISAGREE') {
               stats.disagreements++; stats.disagreementDetails.push(comparison.record);
             }
-          }
+          } } finally { for (const fit of fitted) fit.scoringBytes?.fill(0); }
         });
         queue = work.catch(() => {}); return work;
       } }); } catch (error) { stats.notes.push(`Discovery failed: ${error.message}`); }

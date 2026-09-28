@@ -9,19 +9,17 @@
  *   - Swarm A/B/C POD  swarm/SWRAesoc<gpsweek><dow>.sp3.gz
  *   - CryoSat-2 POD    cryosat2/<YYMMDD>.cs2.v4.sp3.gz
  */
-                                                      
-                                                                 
-                                             
+
 import { gpsWeek, newestMatching } from './util.mjs';
 
 const BASE = 'http://navigation-office.esa.int/products';
 
 async function newestInDir(
-  http            ,
-  dirUrl        ,
-  prefixes          ,
-  suffix        ,
-)                         {
+  http,
+  dirUrl,
+  prefixes,
+  suffix,
+) {
   let html        ;
   try {
     html = await http.getText(dirUrl);
@@ -35,7 +33,7 @@ async function newestInDir(
   return null;
 }
 
-export const esaPodSource                  = {
+export const esaPodSource= {
   id: 'esa-pod',
   name: 'ESA Precise Orbit Determination (POD)',
   operator: 'ESA / ESOC Navigation Office',
@@ -43,8 +41,8 @@ export const esaPodSource                  = {
   contentExt: 'sp3.gz',
   host: 'navigation-office.esa.int',
 
-  async discover(ctx               )                                {
-    const out                       = [];
+  async discover(ctx) {
+    const out= [];
 
     // multi-GNSS POD — current GPS week, else previous.
     for (const week of [gpsWeek(), gpsWeek() - 1]) {

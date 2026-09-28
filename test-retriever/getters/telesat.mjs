@@ -3,12 +3,10 @@
  * Manifest `FleetLong.csv` lists the fleet; per-satellite `<Sat>.C.csv` holds
  * center-of-box predictions. (Full state vectors are not publicly exposed.)
  */
-                                                      
-                                                                 
 
 const BASE = 'https://app.telesat.com/data';
 
-export const telesatSource                  = {
+export const telesatSource= {
   id: 'telesat',
   name: 'Telesat',
   operator: 'Telesat',
@@ -16,7 +14,7 @@ export const telesatSource                  = {
   contentExt: 'csv',
   host: 'app.telesat.com',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const csv = await ctx.http.getText(`${BASE}/FleetLong.csv`);
     const sats = csv
       .split('\n')

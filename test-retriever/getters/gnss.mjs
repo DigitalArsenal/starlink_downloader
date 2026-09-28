@@ -9,18 +9,17 @@
  * The IGS long filename embeds a sortable timestamp, so the newest file is the
  * lexicographic maximum of the matching names in the current (or previous) week.
  */
-                                                      
-                                                                 
+
 import { gpsWeek, newestMatching } from './util.mjs';
 
 const SUFFIX = '_ORB.SP3.gz';
 
 async function discoverSp3(
-  ctx               ,
-  base        ,
-  prefixes          ,
-  satelliteName        ,
-)                                {
+  ctx,
+  base,
+  prefixes,
+  satelliteName,
+) {
   const weeks = [gpsWeek(), gpsWeek() - 1];
   for (const week of weeks) {
     let html        ;
@@ -47,7 +46,7 @@ async function discoverSp3(
   return [];
 }
 
-export const gpsSource                  = {
+export const gpsSource= {
   id: 'gps-precise',
   name: 'GPS precise ephemerides (SP3)',
   operator: 'IGS / BKG',
@@ -63,7 +62,7 @@ export const gpsSource                  = {
     ),
 };
 
-export const glonassSource                  = {
+export const glonassSource= {
   id: 'glonass-precise',
   name: 'GLONASS precise ephemerides (SP3)',
   operator: 'IGS / ESA',

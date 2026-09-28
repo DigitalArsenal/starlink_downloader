@@ -4,12 +4,10 @@
  *   planet.states  — per-satellite state vectors (id, time, x,y,z, vx,vy,vz, …)
  *   planet_mc.tle  — TLEs
  */
-                                                      
-                                                  
 
 const BASE = 'https://ephemerides.planet-labs.com';
 
-export const planetSource                  = {
+export const planetSource= {
   id: 'planet',
   name: 'Planet Labs',
   operator: 'Planet Labs PBC',
@@ -17,7 +15,7 @@ export const planetSource                  = {
   contentExt: 'states',
   host: 'ephemerides.planet-labs.com',
 
-  async discover()                                {
+  async discover() {
     return [
       {
         id: 'planet.states',
@@ -25,7 +23,7 @@ export const planetSource                  = {
         noradId: null,
         ext: 'states',
         hints: { satelliteName: 'Planet fleet (states)' },
-      } ,
+      },
     ];
   },
 };

@@ -6,13 +6,11 @@
  *   MEME_62559_STARLINK-11517_1762216_Operational_1466720220_UNCLASSIFIED.txt
  *        ^norad ^name          ^intl   ^status    ^gen-unix   ^classification
  */
-                                                      
-                                                                 
 
 const BASE = 'https://api.starlink.com/public-files/ephemerides/';
 const MANIFEST = `${BASE}MANIFEST.txt`;
 
-function parseFilename(name        )                                                            {
+function parseFilename(name) {
   const stem = name.replace(/\.txt$/i, '');
   const parts = stem.split('_');
   // [MEME, norad, name, intlId, status, genUnix, classification]
@@ -30,7 +28,7 @@ function parseFilename(name        )                                            
   };
 }
 
-export const starlinkSource                  = {
+export const starlinkSource= {
   id: 'spacex-starlink',
   name: 'SpaceX Starlink',
   operator: 'SpaceX',
@@ -38,7 +36,7 @@ export const starlinkSource                  = {
   contentExt: 'txt',
   host: 'api.starlink.com',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const manifest = await ctx.http.getText(MANIFEST);
     const lines = manifest
       .split('\n')

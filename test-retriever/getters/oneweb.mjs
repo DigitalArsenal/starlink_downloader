@@ -6,12 +6,10 @@
  *   https://ephemeris.oneweb.net/timestamp.txt          (current epoch)
  *   https://ephemeris.oneweb.net/ltef_checksum/...       (SHA-1)
  */
-                                                      
-                                                  
 
 const BASE = 'https://ephemeris.oneweb.net';
 
-export const onewebSource                  = {
+export const onewebSource= {
   id: 'eutelsat-oneweb',
   name: 'Eutelsat OneWeb',
   operator: 'Eutelsat OneWeb',
@@ -19,7 +17,7 @@ export const onewebSource                  = {
   contentExt: 'csv',
   host: 'ephemeris.oneweb.net',
 
-  async discover()                                {
+  async discover() {
     return [
       {
         id: 'ltef.csv',

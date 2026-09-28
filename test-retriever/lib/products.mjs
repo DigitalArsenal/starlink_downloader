@@ -7,7 +7,11 @@ export function ommBytes(elements) {
   for (const key of Object.keys(row)) if (elements[key] !== undefined && typeof elements[key] !== 'object') row[key] = elements[key];
   row.CCSDS_OMM_VERS = 2;
   row.TIME_SYSTEM = standards.OMM.timingStandard.UTC;
-  // The SDS default theory is SGP4; no frame/time conversion happens here.
+  row.MEAN_ELEMENT_THEORY = standards.OMM.meanElementSource.SGP4;
+  row.CENTER_NAME = 'EARTH';
+  row.REFERENCE_FRAME = new standards.OMM.RFMT(standards.OMM.RFMUnion.CustomFrameWrapper,
+    new standards.OMM.CustomFrameWrapperT(standards.OMM.CustomFrame.TEME), 0, 'TEME');
+  // These are the WASM output / SupGP convention labels, not frame conversions.
   return writeFB(row);
 }
 export function textFitProducts(fit) {

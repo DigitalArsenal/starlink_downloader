@@ -3,12 +3,10 @@
  * CCSDS OEM ephemeris (BACC), published as a weekly zip on cmse.gov.cn.
  * The index page embeds the latest `./YYYYMM/W…….zip` link (Mon/Wed/Fri cadence).
  */
-                                                      
-                                                                 
 
 const BASE = 'https://www.cmse.gov.cn/gfgg/zgkjzgdcs/';
 
-export const cssSource                  = {
+export const cssSource= {
   id: 'css-tiangong',
   name: 'China Space Station (Tiangong)',
   operator: 'China Manned Space Agency (BACC)',
@@ -16,7 +14,7 @@ export const cssSource                  = {
   contentExt: 'zip',
   host: 'www.cmse.gov.cn',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const html = await ctx.http.getText(BASE);
     const m = html.match(/\.\/(\d{6}\/W\d+\.zip)/);
     if (!m) return [];

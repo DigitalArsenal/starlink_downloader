@@ -5,14 +5,13 @@
  *   i_<region>_e_<lon>_<sat>_<date>_<time>   ← ECF ephemeris (fetched here)
  *   i_<region>_c_…  center-of-box, i_<region>_m_…  11-parameter maneuver
  */
-                                                      
-                                                                 
+
 import { scrapeOptionValues } from './util.mjs';
 
 const INDEX = 'https://my.intelsat.com/ephemeris/public';
 const BASE = 'https://my.intelsat.com/Resource/Ephemeris/';
 
-export const intelsatSource                  = {
+export const intelsatSource= {
   id: 'intelsat',
   name: 'Intelsat',
   operator: 'Intelsat',
@@ -20,7 +19,7 @@ export const intelsatSource                  = {
   contentExt: 'txt',
   host: 'my.intelsat.com',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const html = await ctx.http.getText(INDEX);
     const ephemerisFiles = scrapeOptionValues(html).filter((v) => /_e_/.test(v));
     const unique = [...new Set(ephemerisFiles)];

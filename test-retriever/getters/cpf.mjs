@@ -8,12 +8,10 @@
  * (LAGEOS, LARES, Etalon, Sentinel, Jason, …) lives at EDC (edc.dgfi.tum.de)
  * or CDDIS, which require a free account — see docs/sources.md.
  */
-                                                      
-                                                                 
 
 const BASE = 'http://navigation-office.esa.int/products/cpf_predictions';
 
-export const cpfSource                  = {
+export const cpfSource= {
   id: 'cpf',
   name: 'CPF laser-ranging predictions (ESA)',
   operator: 'ESA / ESOC Navigation Office',
@@ -21,7 +19,7 @@ export const cpfSource                  = {
   contentExt: 'cpf',
   host: 'navigation-office.esa.int',
 
-  async discover(ctx               )                                {
+  async discover(ctx) {
     const html = await ctx.http.getText(`${BASE}/`);
     // <target>_cpf_<yymmdd>_<seq>.esa — keep the newest per target.
     const best = new Map                                                       ();
