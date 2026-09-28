@@ -20,10 +20,10 @@ export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, ou
       let references = supgp ? [] : null;
       if (supgp) for (const group of groups[source.id] ?? []) {
         try { references.push(...(await celestrak.get(group)).rows); }
-        catch (error) { stats.notes.push(`${group} SupGP: ${error.message}`); }
+        catch (error) { if (celestrak.failures >= 30) throw error; stats.notes.push(`${group} SupGP: ${error.message}`); }
       }
       let queue = Promise.resolve();
-      await getSource(source, { limit, fetchImpl, note: note => stats.notes.push(note), consume: item => {
+      try { await getSource(source, { limit, fetchImpl, note: note => stats.notes.push(note), consume: item => {
         const work = queue.then(async () => {
           stats.filesFetched++;
           const fleet = ['eutelsat-oneweb', 'planet', 'gps-precise', 'glonass-precise', 'esa-pod'].includes(source.id);
@@ -56,7 +56,7 @@ export async function run({ sourceIds = anonymous.map(s => s.id), limit = 50, ou
           }
         });
         queue = work.catch(() => {}); return work;
-      } });
+      } }); } catch (error) { stats.notes.push(`Discovery failed: ${error.message}`); }
       await queue; stats.durationMs = Date.now() - sourceStart;
       onProgress(`${source.id}: ${stats.filesFetched} files, ${stats.fitted} fitted, ${stats.compared} compared`);
     }
