@@ -133,7 +133,7 @@ WASM parser has an unknown object count, never an invented successful count.
 
 ## CelesTrak through Tor (firewall recovery)
 
-This network is currently blocked by CelesTrak's firewall: TCP 443 times out, for reasons unrelated to our request behavior. `--celestrak-via tor` sends only the CelesTrak supplemental-GP requests through a local Tor SOCKS proxy (`brew services start tor`; override the address with `TEST_RETRIEVER_TOR_SOCKS`). Operator sources are always fetched directly.
+Celestrak is currently blocked by this network's firewall: TCP 443 times out, for reasons unrelated to our request behavior. `--celestrak-via tor` sends only the CelesTrak supplemental-GP requests through a local Tor SOCKS proxy (`brew services start tor`; override the address with `TEST_RETRIEVER_TOR_SOCKS`). Operator sources are always fetched directly.
 
 Tor restores reachability. It is **not** a way around rate limits. Every rule in `CELESTRAK_FETCH_POLICY.md` applies unchanged:
 
